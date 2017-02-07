@@ -6,7 +6,7 @@ CLOCKWORKRT.apps = {};
 zip.workerScriptsPath = "/js/";
 
 CLOCKWORKRT.apps.installAppFromLocalFile = function (callback) {
-    showLoader("Select a .hgp file","");
+    CLOCKWORKRT.ui.showLoader("Select a .hgp file","");
     // Create the picker object and set options
     var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
     openPicker.viewMode = Windows.Storage.Pickers.PickerViewMode.list;
@@ -31,12 +31,12 @@ CLOCKWORKRT.apps.installAppFromLocalFile = function (callback) {
 };
 
 
-CLOCKWORKRT.apps.installAppFromURL = function (url,callback) {
-    showLoader("Downloading the game package", "");
+CLOCKWORKRT.apps.installAppFromURL = function (url, callback) {
+    CLOCKWORKRT.ui.showLoader("Downloading the game package", "");
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            CLOCKWORKRT.apps.installGameFromBlob(this.response, callback);
+            CLOCKWORKRT.apps.installAppFromBlob(this.response, callback);
         }
     }
     xhr.open('GET', url);
@@ -62,13 +62,22 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                     function copyAppFiles(appname) {
                         var currentfile = 1;
                         entries.recursiveForEach(function (file, cb) {
-                            showLoader("Copying game files", currentfile+"/"+nentries);
+                            CLOCKWORKRT.ui.showLoader("Copying game files", currentfile+"/"+nentries);
                             var localFolder = Windows.Storage.ApplicationData.current.localFolder;
                             var path = "installedApps/" + appname + "/" + file.filename;
                             var pathFolders = path.split("/");
                             var filename = pathFolders.pop();
 
                             navigatePath(localFolder, pathFolders, function (folder) {
+                                if (file.directory) {
+                                    currentfile++;
+                                    if (currentfile > nentries) {
+                                        CLOCKWORKRT.ui.hideLoader();
+                                        callback();
+                                    }
+                                    cb();
+                                    return;
+                                }
                                 console.log("creating " + filename);
                                 file.getData(new zip.BlobWriter(), function (blob) {
                                     folder.createFileAsync(filename, Windows.Storage.CreationCollisionOption.replaceExisting).then(function (file) {
@@ -85,7 +94,7 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                                                     output.close();
                                                     currentfile++;
                                                     if (currentfile > nentries) {
-                                                        hideLoader();
+                                                        CLOCKWORKRT.ui.hideLoader();
                                                         callback();
                                                     }
                                                     cb();
@@ -155,6 +164,7 @@ CLOCKWORKRT.apps.getInstalledApps = function () {
 
 CLOCKWORKRT.apps.addInstalledApp = function (app) {
     var apps = CLOCKWORKRT.apps.getInstalledApps();
+    apps = apps.filter(function (x) { return x.name != app.name });
     apps.push(app);
     localStorage.installedApps = JSON.stringify(apps);
 }
@@ -175,3 +185,4 @@ Array.prototype.recursiveForEach = function (action, index) {
     var that = this;
     action(this[i], function () { that.recursiveForEach(action, i + 1); });
 }
+

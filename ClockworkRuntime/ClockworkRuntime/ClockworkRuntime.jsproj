@@ -58,10 +58,17 @@
     <AppxManifest Include="package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="clockwork\clockwork.js" />
+    <Content Include="clockwork\emptyAnimationProxy.js" />
+    <Content Include="clockwork\spritesheet.js" />
     <Content Include="css\default.css" />
     <Content Include="css\menu.css" />
+    <Content Include="game.html" />
+    <Content Include="js\clockworkRT.api.js" />
     <Content Include="js\clockworkRT.ui.js" />
     <Content Include="js\clockworkRT.apps.js" />
+    <Content Include="js\game.js" />
+    <Content Include="js\inflate.js" />
     <Content Include="js\menu.js" />
     <Content Include="js\z-worker.js" />
     <Content Include="js\zip.js" />

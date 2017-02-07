@@ -5,6 +5,14 @@
     font-family: 'Segoe UI';
 }
 
+.fullScreen{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+}
+
 #clockworkLoader {
     position: absolute;
     top: 0px;

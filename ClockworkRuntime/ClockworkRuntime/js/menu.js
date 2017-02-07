@@ -18,17 +18,16 @@
     img: "https://github.com/arcadiogarcia/Hypergap/raw/master/Sample%20games/HelloWorld/gameFiles/tileIcon.png"
 }
 ];
+var menuElements = CLOCKWORKRT.apps.getInstalledApps().map(function (x) { return { name: x.name, text: "Installed app", img: "ms-appdata:///local/installedApps/" + x.name + "/" + x.scope + "/" + x.tileIcon, color: x.themeColor, action: function () { CLOCKWORKRT.apps.launchApp(x.name); } } });
 
 function displayMenuElements(menuElements) {
     menuElements.forEach(function (element, i) {
         var elementDiv = document.createElement("div");
         elementDiv.classList.add( "mainMenuEntry");
-        elementDiv.style.animationDelay = (0.1*i)+"s";
+        elementDiv.style.animationDelay = (0.1 * i) + "s";
+        elementDiv.style.backgroundColor = element.color;
         elementDiv.innerHTML = `<img class="image" src="${element.img}" /><div class="detail">${element.name}</div>`;
-        elementDiv.addEventListener("click", function () {
-            CLOCKWORKRT.ui.showLoader("Cargando", element.name);
-            setTimeout(function () { CLOCKWORKRT.ui.hideLoader() }, 2000);
-        })
+        elementDiv.addEventListener("click", element.action)
         document.getElementById("mainMenu").appendChild(elementDiv);
     });
 }
