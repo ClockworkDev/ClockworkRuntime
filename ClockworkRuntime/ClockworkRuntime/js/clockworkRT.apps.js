@@ -6,14 +6,14 @@ CLOCKWORKRT.apps = {};
 zip.workerScriptsPath = "/js/";
 
 CLOCKWORKRT.apps.installAppFromLocalFile = function (callback) {
-    CLOCKWORKRT.ui.showLoader("Select a .hgp file","");
+    CLOCKWORKRT.ui.showLoader("Select a .cw file","");
     // Create the picker object and set options
     var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
     openPicker.viewMode = Windows.Storage.Pickers.PickerViewMode.list;
     openPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
     // Users expect to have a filtered view of their folders depending on the scenario.
     // For example, when choosing a documents folder, restrict the filetypes to documents for your application.
-    openPicker.fileTypeFilter.replaceAll([".hgp"]);
+    openPicker.fileTypeFilter.replaceAll([".cw"]);
 
 
     openPicker.pickSingleFileAsync().then(function (file) {
@@ -23,7 +23,7 @@ CLOCKWORKRT.apps.installAppFromLocalFile = function (callback) {
     }).done(function (fileBuf) {
         if (fileBuf) {
             var blob = MSApp.createBlobFromRandomAccessStream('application/zip', fileBuf);
-            CLOCKWORKRT.apps.installGameFromBlob(blob, callback);
+            CLOCKWORKRT.apps.installAppFromBlob(blob, callback);
         } else {
             callback();
         }
@@ -175,6 +175,11 @@ CLOCKWORKRT.apps.launchApp = function (name) {
     localStorage.currentAppScope = manifest.scope;
     localStorage.currentAppManifest= JSON.stringify(manifest);
     window.location = "game.html";
+}
+
+CLOCKWORKRT.apps.reset = function (name) {
+    localStorage.clear();
+    CLOCKWORKRT.API.loadMenu();
 }
 
 Array.prototype.recursiveForEach = function (action, index) {

@@ -16,6 +16,10 @@
         });
 
         var manifest = CLOCKWORKRT.API.getManifest();
+        if (!(manifest.capabilities && manifest.capabilities.indexOf("ClockworkRuntimeInternal")>=0)) {
+            CLOCKWORKRT.apps = undefined;
+        }
+
 
         document.body.style["background-color"] = manifest.backgroundColor || "black";
 
