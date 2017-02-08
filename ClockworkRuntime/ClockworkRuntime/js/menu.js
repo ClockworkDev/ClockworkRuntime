@@ -26,6 +26,7 @@ function displayMenuElements(menuElements) {
         elementDiv.classList.add( "mainMenuEntry");
         elementDiv.style.animationDelay = (0.1 * i) + "s";
         elementDiv.style.backgroundColor = element.color;
+        elementDiv.style.borderColor = element.color;
         elementDiv.innerHTML = `<img class="image" src="${element.img}" /><div class="detail">${element.name}</div>`;
         elementDiv.addEventListener("click", element.action)
         document.getElementById("mainMenu").appendChild(elementDiv);

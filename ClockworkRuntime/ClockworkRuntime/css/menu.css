@@ -26,6 +26,7 @@
     animation-fill-mode: backwards;
     margin: 25px;
     transition: 0.1s transform;
+    border:solid 1px;
 }
 
     .mainMenuEntry:hover {
