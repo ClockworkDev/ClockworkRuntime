@@ -385,7 +385,7 @@ var Clockwork = (function () {
             collision: {},
             setVar: function (variable, value) {
                 switch (variable) {
-                    case "#x":
+                    case "$x":
                         this.vars["#moveflag"] = true;
                         if (this.spriteholder != undefined) {
                             animationEngine.setX(this.spriteholder, value);
@@ -393,11 +393,11 @@ var Clockwork = (function () {
                         for (var shape in this.collision) {
                             var shapesBody = this.collision[shape];
                             for (var k = 0; k < shapesBody.length; k++) {
-                                shapesBody[k].x += value - (this.vars["#x"] || 0);
+                                shapesBody[k].x += value - (this.vars["$x"] || 0);
                             }
                         }
                         break;
-                    case "#y":
+                    case "$y":
                         this.vars["#moveflag"] = true;
                         if (this.spriteholder != undefined) {
                             animationEngine.setY(this.spriteholder, value);
@@ -405,11 +405,11 @@ var Clockwork = (function () {
                         for (var shape in this.collision) {
                             var shapesBody = this.collision[shape];
                             for (var k = 0; k < shapesBody.length; k++) {
-                                shapesBody[k].y += value - (this.vars["#y"] || 0);
+                                shapesBody[k].y += value - (this.vars["$y"] || 0);
                             }
                         }
                         break;
-                    case "#z":
+                    case "$z":
                         this.vars["#moveflag"] = true;
                         if (this.spriteholder != undefined) {
                             animationEngine.setZindex(this.spriteholder, value);
@@ -417,11 +417,11 @@ var Clockwork = (function () {
                         for (var shape in this.collision) {
                             var shapesBody = this.collision[shape];
                             for (var k = 0; k < shapesBody.length; k++) {
-                                shapesBody[k].z += value - (this.vars["#z"] || 0);
+                                shapesBody[k].z += value - (this.vars["$z"] || 0);
                             }
                         }
                         break;
-                    case "#state":
+                    case "$state":
                         if (this.spriteholder != undefined) {
                             animationEngine.setState(this.spriteholder, value);
                         }
@@ -444,9 +444,9 @@ var Clockwork = (function () {
                     for (k = 0; k < shapesBody.length; k++) {
                         if (shapesBody[k]["#tag"] == tag) {
                             shapesBody[k] = value;
-                            shapesBody[k].x += this.vars["#x"];
-                            shapesBody[k].y += this.vars["#y"];
-                            shapesBody[k].z += this.vars["#z"];
+                            shapesBody[k].x += this.vars["$x"];
+                            shapesBody[k].y += this.vars["$y"];
+                            shapesBody[k].z += this.vars["$z"];
                             shapesBody[k]["#tag"] = tag;
                         }
                     }
@@ -579,6 +579,7 @@ var Clockwork = (function () {
         var newone = inheritObject(components[type]);
         newone.vars["#name"] = name;
         newone.spriteholder = undefined;
+        addSyntacticSugar(newone);
         return newone;
     };
 
@@ -587,8 +588,39 @@ var Clockwork = (function () {
         var newone = inheritObject(components["@dynamic_" + name]);
         newone.vars["#name"] = name;
         newone.spriteholder = undefined;
+        addSyntacticSugar(newone);
         return newone;
     };
+
+    function addSyntacticSugar(object) {
+        object.do = new Proxy(object, {
+            get: function (target, name) {
+                return function (event) {
+                    return target.execute_event(name, event)
+                };
+            }
+        });
+        if (object.setVar) { //Regular objects
+            object.var = new Proxy(object, {
+                get: function (target, name) {
+                    return target.getVar(name);
+                },
+                set: function (target, name, value) {
+                    return target.setVar(name, value);
+                }
+            });
+        }else if (object.setEngineVar){ //The engine itself
+            object.var = new Proxy(object, {
+                get: function (target, name) {
+                    return target.getEngineVar(name);
+                },
+                set: function (target, name, value) {
+                    return target.setEngineVar(name, value);
+                }
+            });
+        }
+    }
+    addSyntacticSugar(clockwork);
 
 
     /**
@@ -652,11 +684,11 @@ var Clockwork = (function () {
     */
     this.addObjectLive = function (name, kind, x, y, z, isStatic, timeTravels, vars) {
         var object = implementComponent(name, kind);
-        object.setVar("#x", x || 0);
-        object.setVar("#y", y || 0);
-        object.setVar("#z", z || 0);
+        object.setVar("$x", x || 0);
+        object.setVar("$y", y || 0);
+        object.setVar("$z", z || 0);
         if (object.sprite != undefined) {
-            object.spriteholder = animationEngine.addObject(object.sprite, object.getVar("#state"), x || 0, y || 0, z || 0, isStatic || false, timeTravels || false);
+            object.spriteholder = animationEngine.addObject(object.sprite, object.getVar("$state"), x || 0, y || 0, z || 0, isStatic || false, timeTravels || false);
         }
         for (var name in vars) {
             object.setVar(name, vars[name]);
@@ -827,12 +859,12 @@ var Clockwork = (function () {
             if (o.isstatic != null) {
                 object.isstatic = o.isstatic;
             }
-            object.setVar("#x", o.x);
-            object.setVar("#y", o.y);
+            object.setVar("$x", o.x);
+            object.setVar("$y", o.y);
             if (o.z != undefined) {
-                object.setVar("#z", o.z);
+                object.setVar("$z", o.z);
             } else {
-                object.setVar("#z", 0);
+                object.setVar("$z", 0);
             }
             addJSObjectParameters(object.vars, o.vars);
             object.handler = i;
@@ -880,7 +912,7 @@ var Clockwork = (function () {
         for (var i = 0; i < objects.length; i++) {
             if (objects[i].sprite != undefined) {
                 if (objects[i].sprite != undefined) {
-                    objects[i].spriteholder = animationEngine.addObject(objects[i].sprite, undefined, objects[i].vars["#x"], objects[i].vars["#y"], objects[i].vars["#z"], objects[i].isstatic, objects[i].doesnottimetravel);
+                    objects[i].spriteholder = animationEngine.addObject(objects[i].sprite, undefined, objects[i].vars["$x"], objects[i].vars["$y"], objects[i].vars["$z"], objects[i].isstatic, objects[i].doesnottimetravel);
                 }
             }
         }
@@ -933,7 +965,6 @@ var Clockwork = (function () {
         }
         return result.filter(function (x) { return x !== undefined });
     };
-    this.do = this.execute_event;
 
 
 
