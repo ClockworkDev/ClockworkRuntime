@@ -105,29 +105,7 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                                 });
                             });
 
-                            function navigatePath(startFolder, path, callback) {
-                                if (path.length > 0) {
-                                    var newName = path.shift();
-                                    console.log("trying to navigate to " + newName);
-                                    startFolder.createFolderQuery().getFoldersAsync().done(function (f) {
-                                        var r = f.filter(function (x) { return x.name == newName; });
-                                        if (r.length > 0) {
-                                            console.log("navigated to" + newName);
-                                            navigatePath(r[0], path, callback);
-                                        } else {
-                                            console.log("trying to create" + newName);
-                                            startFolder.createFolderAsync(newName).done(
-                                                function (f) {
-                                                    console.log("created" + newName);
-                                                    navigatePath(f, path, callback)
-                                                }
-                                                );
-                                        }
-                                    });
-                                } else {
-                                    callback(startFolder);
-                                }
-                            }
+                            
                         });
                     }
 
@@ -140,8 +118,15 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                         // text contains the entry data as a String
                         var manifestData = JSON.parse(text);
                         console.log(manifestData);
-                        CLOCKWORKRT.apps.addInstalledApp(manifestData);
-                        setTimeout(function () { copyAppFiles(manifestData.name); }, 100);
+                        Promise.all(Object.keys(manifestData.dependencies).map(function (n,i) {
+                            return new Promise(function (resolve, fail) {
+                                CLOCKWORKRT.ui.showLoader("Downloading dependencies", i + "/" + Object.keys(manifestData.dependencies).length);
+                                CLOCKWORKRT.apps.installDependency(n, manifestData.dependencies[n], resolve);
+                            })
+                        })).then(function () {
+                            CLOCKWORKRT.apps.addInstalledApp(manifestData);
+                            setTimeout(function () { copyAppFiles(manifestData.name); }, 100);
+                        });
                         // close the zip reader
                         //reader.close(function () {
                         //    // onclose callback
@@ -150,7 +135,6 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                     }, function (current, total) {
                         console.log(current,total);
                     });
-
                 }
             });
         }, function (error) {
@@ -182,6 +166,37 @@ CLOCKWORKRT.apps.reset = function (name) {
     CLOCKWORKRT.API.loadMenu();
 }
 
+CLOCKWORKRT.apps.installDependency = function (name, version, callback) {
+    var localFolder = Windows.Storage.ApplicationData.current.localFolder;
+    var path = `installedDependencies/${name}/${version}.js`
+    var pathFolders = path.split("/");
+    var filename = pathFolders.pop();
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function () {
+        if (this.readyState === 4) {
+            var packageContent=this.responseText;
+            navigatePath(localFolder, pathFolders, function (folder) {
+                folder.createFileAsync(filename, Windows.Storage.CreationCollisionOption.replaceExisting).then(function (file) {
+                    Windows.Storage.FileIO.writeTextAsync(file, packageContent).then(callback);
+                });
+            });
+        }
+    };
+    request.open('GET', `http://cwpm.azurewebsites.net/api/packages/${name}/${version}`, true);
+    request.send();
+}
+
+CLOCKWORKRT.apps.getDependency = function (name, version, callback) {
+    var uri = new Windows.Foundation.Uri(`ms-appdata:///local/installedDependencies/${name}/${version}.js`);
+    var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
+        Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
+            callback(x);
+        });
+    }, function (x) {
+        console.log(x);
+    });
+}
+
 Array.prototype.recursiveForEach = function (action, index) {
     var i = index || 0;
     if (i >= this.length) {
@@ -191,3 +206,28 @@ Array.prototype.recursiveForEach = function (action, index) {
     action(this[i], function () { that.recursiveForEach(action, i + 1); });
 }
 
+//File system helper functions
+
+function navigatePath(startFolder, path, callback) {
+    if (path.length > 0) {
+        var newName = path.shift();
+        console.log("trying to navigate to " + newName);
+        startFolder.createFolderQuery().getFoldersAsync().done(function (f) {
+            var r = f.filter(function (x) { return x.name == newName; });
+            if (r.length > 0) {
+                console.log("navigated to" + newName);
+                navigatePath(r[0], path, callback);
+            } else {
+                console.log("trying to create" + newName);
+                startFolder.createFolderAsync(newName).done(
+                    function (f) {
+                        console.log("created" + newName);
+                        navigatePath(f, path, callback)
+                    }
+                    );
+            }
+        });
+    } else {
+        callback(startFolder);
+    }
+}

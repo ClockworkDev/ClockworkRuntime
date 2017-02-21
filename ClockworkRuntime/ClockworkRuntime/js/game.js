@@ -16,18 +16,13 @@
         });
 
         var manifest = CLOCKWORKRT.API.getManifest();
-        if (!(manifest.capabilities && manifest.capabilities.indexOf("ClockworkRuntimeInternal")>=0)) {
-            CLOCKWORKRT.apps = undefined;
-        }
 
 
         document.body.style["background-color"] = manifest.backgroundColor || "black";
 
-        //List of components, only two operations: push and read
-        //This allows to detect when all the callbacks have been executed
+        //List of components, only two operations are allowed: push and read
         CLOCKWORKRT.components = (function () {
             var presetList = [];
-            //var remainingPresets = manifest.presets.length;
             return {
                 push: function (x) {
                     //Array
@@ -38,10 +33,19 @@
                     if (x && x.length == undefined) {
                         presetList.push(x);
                     }
-                    //remainingPresets--;
-                    //if (remainingPresets == 0) {
-                    //    readyToGo();
-                    //}
+                },
+                get: function () {
+                    return presetList;
+                }
+            };
+        })();
+
+        //List of components, only two operations are allowed: push and read
+        CLOCKWORKRT.collisions = (function () {
+            var presetList = [];
+            return {
+                push: function (x) {
+                    presetList.push(x);
                 },
                 get: function () {
                     return presetList;
@@ -52,26 +56,38 @@
         CLOCKWORKCONFIG = {
             enginefps: manifest.enginefps,
             animationfps: manifest.animationfps,
-            screenbuffer_width: manifest.screenResolution? manifest.screenResolution.w:0,
-            screenbuffer_height: manifest.screenResolution?manifest.screenResolution.h:0
+            screenbuffer_width: manifest.screenResolution ? manifest.screenResolution.w : 0,
+            screenbuffer_height: manifest.screenResolution ? manifest.screenResolution.h : 0
         };
 
-        manifest.components.recursiveForEach(function (file, cb) {
-            var uri = new Windows.Foundation.Uri(CLOCKWORKRT.API.appPath() + "/" + file);
-            var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
-                Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
-                    eval(x); //Dirty AF
-                    cb();
-                });
-            }, function (x) {
-                console.log(x);
+        Object.keys(manifest.dependencies).recursiveForEach(function (name, cb) {
+            CLOCKWORKRT.apps.getDependency(name, manifest.dependencies[name], function (x) {
+                eval(x);
+                cb();
             });
+        }, 0, loadComponents);
 
-            //script.type = 'text/javascript';
-            //script.src = HYPERGAP.API.appPath() + "/" + x;
-            //document.body.appendChild(script);
-        }, 0, readyToGo);
+        function loadComponents() {
+            //If the capability is not defined, block access to internal RT API
+            if (!(manifest.capabilities && manifest.capabilities.indexOf("ClockworkRuntimeInternal") >= 0)) {
+                CLOCKWORKRT.apps = undefined;
+            }
+            manifest.components.recursiveForEach(function (file, cb) {
+                var uri = new Windows.Foundation.Uri(CLOCKWORKRT.API.appPath() + "/" + file);
+                var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
+                    Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
+                        eval(x); //Dirty AF
+                        cb();
+                    });
+                }, function (x) {
+                    console.log(x);
+                });
 
+                //script.type = 'text/javascript';
+                //script.src = HYPERGAP.API.appPath() + "/" + x;
+                //document.body.appendChild(script);
+            }, 0, readyToGo);
+        }
 
         function readyToGo() {
             switch (manifest.renderer) {
@@ -87,7 +103,7 @@
                     document.getElementById("canvas").style.height = window.innerHeight;
                     document.getElementById("canvas").width = window.innerWidth;
                     document.getElementById("canvas").height = window.innerHeight;
-                    setUpAnimation(function () { setUpEngine(document.getElementById("canvas")); });
+                    setUpAnimation(function (animLib) { setUpEngine(document.getElementById("canvas"), animLib); });
                     break;
             }
         }
@@ -115,23 +131,34 @@
             });
             canvasAnimation.setFullScreen();
             canvasAnimation.setWorkingFolder("ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope);
-            canvasAnimation.asyncLoad(manifest.spritesheets.map(x=>"ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope + "/" + x), (function (c) { return function () { callback(c) }; })(canvasAnimation));
+            manifest.spritesheets.recursiveForEach(function (file, cb) {
+                var uri = new Windows.Foundation.Uri(CLOCKWORKRT.API.appPath() + "/" + file);
+                var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
+                    Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
+                        canvasAnimation.loadSpritesheetJSONObject(JSON.parse(x));
+                        cb();
+                    });
+                }, function (x) {
+                    console.log(x);
+                });
+            }, 0, (function (c) { return function () { callback(c) }; })(canvasAnimation));
         }
 
 
-        function setUpEngine(container,animLib) {
+        function setUpEngine(container, animLib) {
             var engineInstance = new Clockwork();
             CLOCKWORKCONFIG.engine = engineInstance;
             engineInstance.setAnimationEngine(animLib);
             //manifest.dependencies.collisions.map(x=> HYPERGAP.LIBRARIES.getIncludedCollisions()[x]).filter(x=>x).forEach(engineInstance.registerCollision);
             //manifest.dependencies.presets.map(x=> HYPERGAP.LIBRARIES.getIncludedPresets()[x]).filter(x=>x).forEach(engineInstance.loadPresets);
             //engineInstance.loadPresets(HYPERGAP.presets.getPresets());
+            CLOCKWORKRT.collisions.get().map(engineInstance.registerCollision);
             engineInstance.loadComponents(CLOCKWORKRT.components.get());
             manifest.levels.map(x=>CLOCKWORKRT.API.appPath() + "/" + x).recursiveForEach(function (x, cb) {
                 var uri = new Windows.Foundation.Uri(x);
                 var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
                     Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
-                        engineInstance.loadLevelsFromJSONobject(JSON.parse(x),cb);
+                        engineInstance.loadLevelsFromJSONobject(JSON.parse(x), cb);
                     });
                 }, function (x) {
                     console.log(x);

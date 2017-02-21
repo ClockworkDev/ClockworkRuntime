@@ -703,8 +703,7 @@ var Clockwork = (function () {
         exitFlag = true;
         setTimeout(function () {
             deleteSprites();
-            //Just in case?
-            animationEngine.clear();
+            animationEngine.clear();//Just in case
             objects = loadLevelObjects(parsedLevels[n]);
             assignSprites();
             exitFlag = false;
