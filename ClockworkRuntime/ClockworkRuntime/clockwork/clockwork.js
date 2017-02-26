@@ -609,7 +609,7 @@ var Clockwork = (function () {
                     return target.setVar(name, value);
                 }
             });
-        }else if (object.setEngineVar){ //The engine itself
+        } else if (object.setEngineVar) { //The engine itself
             object.var = new Proxy(object, {
                 get: function (target, name) {
                     return target.getEngineVar(name);
@@ -978,7 +978,9 @@ var Clockwork = (function () {
 
 
     function registerShape(shapename) {
-        collisions.shapes.push(shapename);
+        if (collisions.shapes.indexOf(shapename) == -1) {
+            collisions.shapes.push(shapename);
+        }
     }
 
     function registerCollisionDetector(shape1, shape2, detector) {
@@ -994,12 +996,9 @@ var Clockwork = (function () {
     */
 
     this.registerCollision = function (collisionPackage) {
-        for (var i = 0; i < collisionPackage.shapes.length; i++) {
-            registerShape(collisionPackage.shapes[i]);
-        }
-        for (i = 0; i < collisionPackage.detectors.length; i++) {
-            registerCollisionDetector(collisionPackage.detectors[i].shape1, collisionPackage.detectors[i].shape2, collisionPackage.detectors[i].detector);
-        }
+        registerShape(collisionPackage.shape1);
+        registerShape(collisionPackage.shape2);
+        registerCollisionDetector(collisionPackage.shape1, collisionPackage.shape2, collisionPackage.detector);
     };
 
     function processCollisions() {
