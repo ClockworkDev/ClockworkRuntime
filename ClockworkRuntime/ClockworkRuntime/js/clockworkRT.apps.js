@@ -157,7 +157,18 @@ CLOCKWORKRT.apps.launchApp = function (name) {
     var manifest=CLOCKWORKRT.apps.getInstalledApps().filter(x=>x.name == name)[0];
     localStorage.currentAppName=manifest.name;
     localStorage.currentAppScope = manifest.scope;
-    localStorage.currentAppManifest= JSON.stringify(manifest);
+    localStorage.currentAppManifest = JSON.stringify(manifest);
+    localStorage.debugMode = false;
+    window.location = "game.html";
+}
+
+CLOCKWORKRT.apps.debugApp = function (name, debugFrontend) {
+    var manifest = CLOCKWORKRT.apps.getInstalledApps().filter(x=>x.name == name)[0];
+    localStorage.currentAppName = manifest.name;
+    localStorage.currentAppScope = manifest.scope;
+    localStorage.currentAppManifest = JSON.stringify(manifest);
+    localStorage.debugMode = true;
+    localStorage.debugFrontend = debugFrontend;
     window.location = "game.html";
 }
 

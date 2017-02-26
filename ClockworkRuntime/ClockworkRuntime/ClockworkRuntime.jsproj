@@ -70,6 +70,7 @@
     <Content Include="js\game.js" />
     <Content Include="js\inflate.js" />
     <Content Include="js\menu.js" />
+    <Content Include="js\socket.io.js" />
     <Content Include="js\z-worker.js" />
     <Content Include="js\zip.js" />
     <Content Include="menu.html" />

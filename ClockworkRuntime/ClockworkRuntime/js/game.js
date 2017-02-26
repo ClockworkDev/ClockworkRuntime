@@ -22,33 +22,40 @@
 
         //List of components, only two operations are allowed: push and read
         CLOCKWORKRT.components = (function () {
-            var presetList = [];
+            var list = [];
             return {
                 push: function (x) {
                     //Array
                     if (x && x.length > 0) {
-                        x.forEach(x=> presetList.push(x));
+                        x.forEach(x=> list.push(x));
                     }
                     //Element
                     if (x && x.length == undefined) {
-                        presetList.push(x);
+                        list.push(x);
                     }
                 },
                 get: function () {
-                    return presetList;
+                    return list;
                 }
             };
         })();
 
         //List of components, only two operations are allowed: push and read
         CLOCKWORKRT.collisions = (function () {
-            var presetList = [];
+            var list = [];
             return {
                 push: function (x) {
-                    presetList.push(x);
+                    //Array
+                    if (x && x.length > 0) {
+                        x.forEach(x=> list.push(x));
+                    }
+                    //Element
+                    if (x && x.length == undefined) {
+                        list.push(x);
+                    }
                 },
                 get: function () {
-                    return presetList;
+                    return list;
                 }
             };
         })();
@@ -164,6 +171,12 @@
                     console.log(x);
                 });
             }, 0, function () {
+                if (localStorage.debugMode) {
+                    var socket = io(localStorage.debugFrontend);
+                    socket.on('connect', function () { });
+                    socket.on('event', function (data) { });
+                    socket.on('disconnect', function () { });
+                }
                 engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
                 //var semaphorelength = 0;
                 //if (HYPERGAP.CONTROLLER.sendMessage) {
