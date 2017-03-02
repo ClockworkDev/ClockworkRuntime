@@ -453,14 +453,34 @@ var Clockwork = (function () {
                 }
             },
             execute_event: function (name, args) {
-                if (this.eventfunction[name] != undefined) {
-                    return this.eventfunction[name].call(this, args);
+                if (debugMode == true) {
+                    for (var bp of breakpoints) {
+                        if (name == bp.event && this.instanceOf(bp.component)) {
+                            pausedAtBreakpoint = true;
+                            hitBreakpoint(bp, this);
+                            eventTreeSnapshot = { position: "EventStart", object: this, event: name };
+                            //throw new Error();
+                        }
+                    }
+                    try {
+                        if (this.eventfunction[name] != undefined) {
+                            this.eventfunction[name].call(this, args);
+                        }
+                    } catch (e) {
+                        console.log(e);
+                        var newNode = { child: eventTreeSnapshot };
+                        eventTreeSnapshot = newNode;
+                        var exception = e.stack;
+                        var stoppedAtLine = +(/eval code:([0-9]*):([0-9]*)/.exec(exception)[1]);
+                        eventTreeSnapshot.remainingFunctionChunk = ""; //TODO eval code:138:25
+                        eventTreeSnapshot.event = name;
+                        throw e;
+                    }
                 } else {
-                    debugLog("Event handler " + name + " does not exist in " + this.name, 2);
+                    if (this.eventfunction[name] != undefined) {
+                        this.eventfunction[name].call(this, args);
+                    }
                 }
-            },
-            do: function (name, args) {
-                return this.execute_event(name, args);
             },
             instanceOf: function (name) {
                 if (this.name == name) {
@@ -944,7 +964,6 @@ var Clockwork = (function () {
             return;
         }
 
-
     }
 
     /**
@@ -955,15 +974,26 @@ var Clockwork = (function () {
 
     this.execute_event = function (name, e_args) {
         var r, result = [];
-        for (var i = 0; i < objects.length; i++) {
-            var body = objects[i];
-            if (body != undefined) {
-                body.execute_event("#", { "name": name, "args": e_args });
-                r = body.execute_event(name, e_args);
-                result.push(r);
-            }
+        if (debugMode == true) {
+            objects.forEach(function (body, i) {
+                if (typeof body !== "undefined") {
+                    body.execute_event("#", { "name": name, "args": e_args });
+                    try {
+                        body.execute_event(name, e_args);
+                    } catch (e) {
+                        eventTreeSnapshot.nextIndex = i + 1;
+                        throw e;
+                    }
+                }
+            });
+        } else {
+            objects.forEach(function (body) {
+                if (typeof body !== "undefined") {
+                    body.execute_event("#", { "name": name, "args": e_args });
+                    body.execute_event(name, e_args);
+                }
+            });
         }
-        return result.filter(function (x) { return x !== undefined });
     };
 
 
@@ -1121,6 +1151,28 @@ var Clockwork = (function () {
             }
         }
         return cache;
+    }
+
+
+    /////// DEBUG FUNCTIONALITY
+
+    var debugMode = false;
+    var breakpointHandler;
+    var pausedAtBreakpoint = false;
+    var breakpoints = [];
+
+    var eventTreeSnapshot;
+
+    this.setBreakpoints = function (bp) {
+        debugMode = true;
+        breakpoints = breakpoints.concat(bp);
+    };
+    this.setBreakpointHandler = function (handler) {
+        debugMode = true;
+        breakpointHandler = handler;
+    };
+    function hitBreakpoint(bp, object) {
+        breakpointHandler(bp, object.vars);
     }
 
 });

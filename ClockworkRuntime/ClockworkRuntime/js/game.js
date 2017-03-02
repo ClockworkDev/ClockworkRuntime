@@ -173,9 +173,15 @@
             }, 0, function () {
                 if (localStorage.debugMode) {
                     var socket = io(localStorage.debugFrontend);
-                    socket.on('connect', function () { });
-                    socket.on('event', function (data) { });
-                    socket.on('disconnect', function () { });
+                    socket.on('setBreakpoints', function (data) {
+                        engineInstance.setBreakpoints(data);
+                    });
+                    engineInstance.setBreakpointHandler(function (bp, vars) {
+                        socket.emit('breakpointHit', {
+                            bp: bp,
+                            vars:vars
+                        });
+                    });
                 }
                 engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
                 //var semaphorelength = 0;
