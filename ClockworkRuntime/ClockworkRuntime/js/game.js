@@ -176,10 +176,12 @@
                     socket.on('setBreakpoints', function (data) {
                         engineInstance.setBreakpoints(data);
                     });
-                    engineInstance.setBreakpointHandler(function (bp, vars) {
+                    engineInstance.setBreakpointHandler(function (bp, stack, vars, globalvars) {
                         socket.emit('breakpointHit', {
                             bp: bp,
-                            vars:vars
+                            vars: vars,
+                            engineVars: globalvars,
+                            stack:stack
                         });
                     });
                 }

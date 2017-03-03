@@ -454,6 +454,7 @@ var Clockwork = (function () {
             },
             execute_event: function (name, args) {
                 if (debugMode == true) {
+                    eventStack.push({ component: this.vars["#name"], event: name });
                     for (var bp of breakpoints) {
                         if (name == bp.event && this.instanceOf(bp.component)) {
                             pausedAtBreakpoint = true;
@@ -476,6 +477,7 @@ var Clockwork = (function () {
                         eventTreeSnapshot.event = name;
                         throw e;
                     }
+                    eventStack.pop();
                 } else {
                     if (this.eventfunction[name] != undefined) {
                         this.eventfunction[name].call(this, args);
@@ -1162,6 +1164,7 @@ var Clockwork = (function () {
     var breakpoints = [];
 
     var eventTreeSnapshot;
+    var eventStack = [];
 
     this.setBreakpoints = function (bp) {
         debugMode = true;
@@ -1172,7 +1175,7 @@ var Clockwork = (function () {
         breakpointHandler = handler;
     };
     function hitBreakpoint(bp, object) {
-        breakpointHandler(bp, object.vars);
+        breakpointHandler(bp, eventStack, object.vars, globalvars);
     }
 
 });
