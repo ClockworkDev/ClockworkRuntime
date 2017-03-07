@@ -27,7 +27,6 @@ var Clockwork = (function () {
 
     //Is the game code trying to exit the current level?
     var exitFlag = false;
-    var exitValue = Symbol("exitValue");
 
     //Holds the setInterval return value
     var intervalholder;
@@ -62,18 +61,11 @@ var Clockwork = (function () {
                     if (i != j && objects[j] != undefined && !isEmpty(objects[j].collision) && objects[i] != undefined) {
                         if (!(moved[i] == false && (moved[j] || secondObject.vars["#moveflag"]) == false)) {
                             thisCache[j] = calculate(firstObject, secondObject);
-                            if (thisCache[j] === exitValue) {
-                                return exitValue;
-                            }
                         } else {
                             var cache = thisCache[j];
                             for (var k = 0; k < cache.length; k++) {
-                                if (firstObject.execute_event("#collide", cache[k].a) == exitValue) {
-                                    return exitValue;
-                                }
-                                if (secondObject.execute_event("#collide", cache[k].b) == exitValue) {
-                                    return exitValue;
-                                }
+                                firstObject.execute_event("#collide", cache[k].a);
+                                secondObject.execute_event("#collide", cache[k].b);
                             }
                         }
                     }
@@ -384,6 +376,9 @@ var Clockwork = (function () {
             engine: clockwork,
             collision: {},
             setVar: function (variable, value) {
+                if (deferringActionsBecausePaused) {
+                    return pushActionQueue((function () { return this.setVar(variable, value); }).bind(this));
+                }
                 switch (variable) {
                     case "$x":
                         this.vars["#moveflag"] = true;
@@ -439,6 +434,9 @@ var Clockwork = (function () {
                 return this.vars[variable];
             },
             setCollider: function (tag, value) {
+                if (deferringActionsBecausePaused) {
+                    return pushActionQueue((function () { return this.setCollider(tag, value); }).bind(this));
+                }
                 for (var shape in this.collision) {
                     var shapesBody = this.collision[shape];
                     for (k = 0; k < shapesBody.length; k++) {
@@ -454,28 +452,25 @@ var Clockwork = (function () {
             },
             execute_event: function (name, args) {
                 if (debugMode == true) {
+                    if (deferringActionsBecausePaused) {
+                        return pushActionQueue((function () { return this.execute_event(name, args); }).bind(this));
+                    }
                     eventStack.push({ component: this.vars["#name"], event: name });
                     for (var bp of breakpoints) {
-                        if (name == bp.event && this.instanceOf(bp.component)) {
-                            pausedAtBreakpoint = true;
+                        if (eventLoopPaused !=true && name == bp.event && this.instanceOf(bp.component)) {
+                            clockwork.debug.pause();
                             hitBreakpoint(bp, this);
-                            eventTreeSnapshot = { position: "EventStart", object: this, event: name };
-                            //throw new Error();
+                            eventTreeSnapshot = { position: "EventStart", object: this, event: name, args: args,deferredActions:[],stackFrame:eventStack[eventStack.length-1]  };
                         }
                     }
-                    try {
-                        if (this.eventfunction[name] != undefined) {
-                            this.eventfunction[name].call(this, args);
-                        }
-                    } catch (e) {
-                        console.log(e);
-                        var newNode = { child: eventTreeSnapshot };
+                    if (this.eventfunction[name] != undefined) {
+                        this.eventfunction[name].call(this, args);
+                    }
+                    if (eventLoopPaused) {
+                        var newNode = { child: eventTreeSnapshot, deferredActions:[] };
                         eventTreeSnapshot = newNode;
-                        var exception = e.stack;
-                        var stoppedAtLine = +(/eval code:([0-9]*):([0-9]*)/.exec(exception)[1]);
-                        eventTreeSnapshot.remainingFunctionChunk = ""; //TODO eval code:138:25
                         eventTreeSnapshot.event = name;
-                        throw e;
+                        eventTreeSnapshot.object = this;
                     }
                     eventStack.pop();
                 } else {
@@ -958,11 +953,17 @@ var Clockwork = (function () {
             animationEngine.tick(1000 / fps);
         }
 
-        if (processCollisions() == exitValue || exitFlag) {
+        if (eventLoopPaused) {
             return;
         }
 
-        if (clockwork.execute_event("#loop") == exitValue || exitFlag) {
+        processCollisions();
+        if (exitFlag) {
+            return;
+        }
+
+        clockwork.execute_event("#loop");
+        if (exitFlag) {
             return;
         }
 
@@ -977,17 +978,17 @@ var Clockwork = (function () {
     this.execute_event = function (name, e_args) {
         var r, result = [];
         if (debugMode == true) {
-            objects.forEach(function (body, i) {
+            for (var i = 0; i < objects.length; i++) {
+                var body = objects[i];
                 if (typeof body !== "undefined") {
                     body.execute_event("#", { "name": name, "args": e_args });
-                    try {
-                        body.execute_event(name, e_args);
-                    } catch (e) {
+                    body.execute_event(name, e_args);
+                    if (eventLoopPaused) {
                         eventTreeSnapshot.nextIndex = i + 1;
-                        throw e;
+                        break;
                     }
                 }
-            });
+            }
         } else {
             objects.forEach(function (body) {
                 if (typeof body !== "undefined") {
@@ -1131,12 +1132,9 @@ var Clockwork = (function () {
                         //Check if they collide
                         if (collisions.detect[shape1] != undefined && collisions.detect[shape1][shape2] != undefined && collisions.detect[shape1][shape2](bodyShape1, bodyShape2, collisionData) == true) {
                             //Send the info to the #collide event handlers
-                            if (b1.execute_event("#collide", { object: b2.handler, shape1kind: shape1, shape2kind: shape2, shape1id: k, shape2id: l, data: collisionData, shape1tag: bodyShape1["#tag"], shape2tag: bodyShape2["#tag"] }) == exitValue) {
-                                return exitValue;
-                            }
-                            if (b2.execute_event("#collide", { object: b1.handler, shape1kind: shape2, shape2kind: shape1, shape1id: l, shape2id: k, data: collisionData, shape1tag: bodyShape2["#tag"], shape2tag: bodyShape1["#tag"] }) == exitValue) {
-                                return exitValue;
-                            }
+                            b1.execute_event("#collide", { object: b2.handler, shape1kind: shape1, shape2kind: shape2, shape1id: k, shape2id: l, data: collisionData, shape1tag: bodyShape1["#tag"], shape2tag: bodyShape2["#tag"] });
+
+                            b2.execute_event("#collide", { object: b1.handler, shape1kind: shape2, shape2kind: shape1, shape1id: l, shape2id: k, data: collisionData, shape1tag: bodyShape2["#tag"], shape2tag: bodyShape1["#tag"] });
                             if (cache.length == 0) {
                                 cache = [];
                                 cache.push({ a: { object: b2.handler, shape1kind: shape1, shape2kind: shape2, shape1id: k, shape2id: l, data: collisionData, shape1tag: bodyShape1["#tag"], shape2tag: bodyShape2["#tag"] }, b: { object: b1.handler, shape1kind: shape2, shape2kind: shape1, shape1id: l, shape2id: k, data: collisionData, shape1tag: bodyShape1["#tag"], shape2tag: bodyShape2["#tag"] } });
@@ -1160,11 +1158,14 @@ var Clockwork = (function () {
 
     var debugMode = false;
     var breakpointHandler;
-    var pausedAtBreakpoint = false;
+    var deferringActionsBecausePaused = false;
+    var eventLoopPaused = false;
     var breakpoints = [];
 
-    var eventTreeSnapshot;
+    var eventTreeSnapshot = null;
     var eventStack = [];
+
+    var actionQueue = [];
 
     this.setBreakpoints = function (bp) {
         debugMode = true;
@@ -1175,7 +1176,55 @@ var Clockwork = (function () {
         breakpointHandler = handler;
     };
     function hitBreakpoint(bp, object) {
-        breakpointHandler(bp, eventStack, object.vars, globalvars);
+        breakpointHandler("breakpointHit", bp, eventStack, object.vars, globalvars);
+    }
+
+    this.debug = {};
+
+    this.debug.pause = function debugPause() {
+        deferringActionsBecausePaused = true;
+        eventLoopPaused = true;
+    }
+
+    this.debug.continue = function () {
+        deferringActionsBecausePaused = false;
+        continueEventTree(eventTreeSnapshot);
+        eventTreeSnapshot = null;
+        eventLoopPaused = false;
+        breakpointHandler("continue");
+    }
+
+    function continueEventTree(node) {
+        if (node.child) {
+            continueEventTree(node.child);
+            node.child = null;
+            flushActionQueue();
+        } else {
+            node.object.execute_event(node.event, node.args);
+        }
+        if (typeof node.nextIndex !== "undefined") {
+            for (var i = node.nextIndex; i < objects.length; i++) {
+                if (objects[i]) {
+                    objects[i].execute_event(node.event, node.args);
+                }
+            }
+        }
+    }
+        
+    function pushActionQueue(action) {
+        var currentNode = eventTreeSnapshot;
+        while (currentNode.stackFrame != eventStack[eventStack.length-1]) { //Search the node corresponding to the stack frame being executed
+            currentNode = currentNode.child;
+        }
+        currentNode.deferredActions.push(action);
+    }
+
+    function flushActionQueue() {
+        var currentNode = eventTreeSnapshot;
+        while (currentNode.child) {
+            currentNode = currentNode.child;
+        }
+        currentNode.deferredActions.forEach(function (x) { x(); });
     }
 
 });

@@ -176,13 +176,23 @@
                     socket.on('setBreakpoints', function (data) {
                         engineInstance.setBreakpoints(data);
                     });
-                    engineInstance.setBreakpointHandler(function (bp, stack, vars, globalvars) {
-                        socket.emit('breakpointHit', {
-                            bp: bp,
-                            vars: vars,
-                            engineVars: globalvars,
-                            stack:stack
-                        });
+                    socket.on('continueRequest', function () {
+                        engineInstance.debug.continue();
+                    });
+                    engineInstance.setBreakpointHandler(function (event, bp, stack, vars, globalvars) {
+                        switch (event) {
+                            case 'breakpointHit':
+                                socket.emit('breakpointHit', {
+                                    bp: bp,
+                                    vars: vars,
+                                    engineVars: globalvars,
+                                    stack: stack
+                                });
+                                break;
+                            case 'continue':
+                                socket.emit('continue', {});
+                                break;
+                        }
                     });
                 }
                 engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
