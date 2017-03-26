@@ -24,7 +24,7 @@
         CLOCKWORKRT.components = (function () {
             var list = [];
             return {
-                push: function (x) {
+                register: function (x) {
                     //Array
                     if (x && x.length > 0) {
                         x.forEach(x => list.push(x));
@@ -44,7 +44,7 @@
         CLOCKWORKRT.collisions = (function () {
             var list = [];
             return {
-                push: function (x) {
+                register: function (x) {
                     //Array
                     if (x && x.length > 0) {
                         x.forEach(x => list.push(x));
@@ -191,6 +191,12 @@
                     socket.on('connect', function () {
                         engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
                     });
+                    socket.on('eval', function (data) {
+                        socket.emit('evalResult', {
+                            id: data.id,
+                            result: engineInstance.debug.eval(data.expression)
+                        });
+                    });
                     engineInstance.setBreakpointHandler(function (event, data) {
                         switch (event) {
                             case 'breakpointHit':
@@ -205,7 +211,10 @@
                                 socket.emit('continue', {});
                                 break;
                             case 'error':
-                                socket.emit('exception', {msg:data.msg});
+                                socket.emit('exception', { msg: data.msg });
+                                break;
+                                case 'log':
+                                socket.emit('log', { msg: data });
                                 break;
                         }
                     });

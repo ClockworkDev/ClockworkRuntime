@@ -207,7 +207,7 @@ var Clockwork = (function () {
         F.prototype = o;
         var nuevo = new F();
         for (var name in o) {
-            if (typeof o[name] == 'object' && name !="engine") {
+            if (typeof o[name] == 'object' && name != "engine") {
                 nuevo[name] = inheritObject(o[name]);
             }
         }
@@ -421,26 +421,24 @@ var Clockwork = (function () {
                     if (deferringActionsBecausePaused) {
                         return pushActionQueue((function () { return this.execute_event(name, args); }).bind(this));
                     }
-                    eventStack.push({ component: this.vars["#name"], event: name });
+                    eventStack.push({ component: this.vars["#name"], event: name, object: this });
                     for (var bp of breakpoints) {
-                        if (eventLoopPaused !=true && name == bp.event && this.instanceOf(bp.component)) {
+                        if (eventLoopPaused != true && name == bp.event && this.instanceOf(bp.component)) {
                             clockwork.debug.pause();
                             hitBreakpoint(bp, this);
-                            eventTreeSnapshot = { position: "EventStart", object: this, event: name, args: args,deferredActions:[],stackFrame:eventStack[eventStack.length-1]  };
+                            eventTreeSnapshot = { position: "EventStart", object: this, event: name, args: args, deferredActions: [], stackFrame: eventStack[eventStack.length - 1] };
+                            for (var i = eventStack.length - 2; i >= 0; i--) {
+                                eventTreeSnapshot = { child: eventTreeSnapshot, deferredActions: [], event: eventStack[i].event, object: eventStack[i].object, stackFrame: eventStack[i] };
+                            }
+                            break;
                         }
                     }
                     if (this.eventfunction[name] != undefined) {
-                        try{
+                        try {
                             this.eventfunction[name].call(this, args);
                         } catch (e) {
-                            breakpointHandler("error", { msg: "The folllowing exception happened at event handler '" + name + "' of '" + this.vars["#name"] + "': " +e.message });
+                            breakpointHandler("error", { msg: "The folllowing exception happened at event handler '" + name + "' of '" + this.vars["#name"] + "': " + e.message });
                         }
-                    }
-                    if (eventLoopPaused) {
-                        var newNode = { child: eventTreeSnapshot, deferredActions:[] };
-                        eventTreeSnapshot = newNode;
-                        eventTreeSnapshot.event = name;
-                        eventTreeSnapshot.object = this;
                     }
                     eventStack.pop();
                 } else {
@@ -563,7 +561,7 @@ var Clockwork = (function () {
     };
 
     function implementComponent(name, type) {
-        if (debugMode && !components[type]){
+        if (debugMode && !components[type]) {
             breakpointHandler("error", { msg: "You tried to create an instance of the component " + type + ", which has not been registered." });
             return;
         }
@@ -863,7 +861,7 @@ var Clockwork = (function () {
             addJSObjectParameters(object.vars, o.vars);
             object.handler = i;
             return object;
-        }).filter(function (x) { return x != null;});
+        }).filter(function (x) { return x != null; });
     }
 
     var loadQueue = function (callback) {
@@ -1155,7 +1153,10 @@ var Clockwork = (function () {
         breakpointHandler = handler;
     };
     function hitBreakpoint(bp, object) {
-        breakpointHandler("breakpointHit", {bp:bp, stack:eventStack, vars:object.vars, globalvars:globalvars});
+        //The object references in the event stack is erased so Socket.io wont try to serialize it (it breaks because of the do proxy)
+        breakpointHandler("breakpointHit", {
+            bp: bp, stack: eventStack.map(function (x) { return { component: x.component, event:x.event}; }), vars: object.vars, globalvars: globalvars
+        });
     }
 
     this.debug = {};
@@ -1183,6 +1184,28 @@ var Clockwork = (function () {
 
     this.debug.stepOut = function () {
 
+    }
+
+    this.debug.eval = function (expression) {
+        try {
+            return JSON.stringify((new Function("return " + expression)).bind(getCurrentPausedObject())());
+        } catch (e) {
+            return e.message;
+        }
+    }
+
+    this.debug.log = function (x) {
+        if (breakpointHandler) {
+            breakpointHandler("log", x);
+        }
+    }
+
+    function getCurrentPausedObject() {
+        var currentNode = eventTreeSnapshot;
+        while (currentNode.child) { 
+            currentNode = currentNode.child;
+        }
+        return currentNode.object;
     }
 
     function continueEventTree(node) {
@@ -1216,10 +1239,10 @@ var Clockwork = (function () {
             }
         }
     }
-        
+
     function pushActionQueue(action) {
         var currentNode = eventTreeSnapshot;
-        while (currentNode.stackFrame != eventStack[eventStack.length-1]) { //Search the node corresponding to the stack frame being executed
+        while (currentNode.stackFrame != eventStack[eventStack.length - 1]) { //Search the node corresponding to the stack frame being executed
             currentNode = currentNode.child;
         }
         currentNode.deferredActions.push(action);
