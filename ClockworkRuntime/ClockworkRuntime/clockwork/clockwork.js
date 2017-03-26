@@ -82,7 +82,6 @@ var Clockwork = (function () {
         clockwork.loader = loader;
     }
 
-    var debugMode = 1;
 
 
     //...................................
@@ -208,7 +207,7 @@ var Clockwork = (function () {
         F.prototype = o;
         var nuevo = new F();
         for (var name in o) {
-            if (typeof o[name] == 'object') {
+            if (typeof o[name] == 'object' && name !="engine") {
                 nuevo[name] = inheritObject(o[name]);
             }
         }
@@ -295,7 +294,6 @@ var Clockwork = (function () {
             try {
                 return new (ActiveXObject)("MSXML2.XMLHTTP.3.0");
             } catch (e) {
-                debugLog("browser doesn't support AJAX.");
                 return null;
             }
         }
@@ -329,38 +327,6 @@ var Clockwork = (function () {
     function cloneObject(o) {
         return JSON.parse(JSON.stringify(o));
     }
-
-    //....................
-    //     Logger
-    //....................
-
-    /**
-     * 
-     *Sends a mesage to the logger, and it may print it on the console depending on the current value of debugMode
-     * @param {String} text - The mesage to log
-     * @param {Number} level - The priority level of the message (1 is error, 2 is warning) (see {@link setDebugMode})
-     *@Private
-     */
-    function debugLog(text, level) {
-        if ((level || 2) <= debugMode) {
-            console.log(text);
-        }
-    }
-
-    /**
-     *Sets the debug mode, which specifies what kind of log messages should be printed
-     * @param {Number} level - The mode to set
-     * When mode is set to 0, nothing will be shown in the console
-     * When mode is set to 1, only errors will be shown in the console
-     * When mode is set to 2, both errors and alerts will be shown in the console
-     * The default mode is 2
-     */
-    this.setDebugMode = function (level) {
-        debugMode = level;
-    }
-
-
-
 
 
     //...................
@@ -464,7 +430,11 @@ var Clockwork = (function () {
                         }
                     }
                     if (this.eventfunction[name] != undefined) {
-                        this.eventfunction[name].call(this, args);
+                        try{
+                            this.eventfunction[name].call(this, args);
+                        } catch (e) {
+                            breakpointHandler("error", { msg: "The folllowing exception happened at event handler '" + name + "' of '" + this.vars["#name"] + "': " +e.message });
+                        }
                     }
                     if (eventLoopPaused) {
                         var newNode = { child: eventTreeSnapshot, deferredActions:[] };
@@ -593,6 +563,10 @@ var Clockwork = (function () {
     };
 
     function implementComponent(name, type) {
+        if (debugMode && !components[type]){
+            breakpointHandler("error", { msg: "You tried to create an instance of the component " + type + ", which has not been registered." });
+            return;
+        }
         var newone = inheritObject(components[type]);
         newone.vars["#name"] = name;
         newone.spriteholder = undefined;
@@ -870,6 +844,9 @@ var Clockwork = (function () {
             } else {
                 object = implementComponent(o.name, o.type);
             }
+            if (object == null) {
+                return null;
+            }
             if (o.sprite != null) {
                 object.sprite = o.sprite;
             }
@@ -886,7 +863,7 @@ var Clockwork = (function () {
             addJSObjectParameters(object.vars, o.vars);
             object.handler = i;
             return object;
-        });
+        }).filter(function (x) { return x != null;});
     }
 
     var loadQueue = function (callback) {
@@ -1167,16 +1144,18 @@ var Clockwork = (function () {
 
     var actionQueue = [];
 
+    var stopAtNextEvent = false;
+
     this.setBreakpoints = function (bp) {
         debugMode = true;
-        breakpoints = breakpoints.concat(bp);
+        breakpoints = bp;
     };
     this.setBreakpointHandler = function (handler) {
         debugMode = true;
         breakpointHandler = handler;
     };
     function hitBreakpoint(bp, object) {
-        breakpointHandler("breakpointHit", bp, eventStack, object.vars, globalvars);
+        breakpointHandler("breakpointHit", {bp:bp, stack:eventStack, vars:object.vars, globalvars:globalvars});
     }
 
     this.debug = {};
@@ -1194,6 +1173,18 @@ var Clockwork = (function () {
         breakpointHandler("continue");
     }
 
+    this.debug.stepOver = function () {
+        stepOverEventTree(eventTreeSnapshot);
+    }
+
+    this.debug.stepIn = function () {
+
+    }
+
+    this.debug.stepOut = function () {
+
+    }
+
     function continueEventTree(node) {
         if (node.child) {
             continueEventTree(node.child);
@@ -1207,6 +1198,21 @@ var Clockwork = (function () {
                 if (objects[i]) {
                     objects[i].execute_event(node.event, node.args);
                 }
+            }
+        }
+    }
+
+    function stepOverEventTree(node) {
+        if (node.child) {
+            stepOverEventTree(node.child);
+        } else {
+            if (node.nextIndex < objects.length) {
+                if (objects[nextIndex]) {
+                    objects[nextIndex].execute_event(node.event, node.args);
+                    //TODO: keep working on step over
+                    //breakpointHandler("step",);
+                }
+                node.nextIndex++;
             }
         }
     }

@@ -27,7 +27,7 @@
                 push: function (x) {
                     //Array
                     if (x && x.length > 0) {
-                        x.forEach(x=> list.push(x));
+                        x.forEach(x => list.push(x));
                     }
                     //Element
                     if (x && x.length == undefined) {
@@ -47,7 +47,7 @@
                 push: function (x) {
                     //Array
                     if (x && x.length > 0) {
-                        x.forEach(x=> list.push(x));
+                        x.forEach(x => list.push(x));
                     }
                     //Element
                     if (x && x.length == undefined) {
@@ -161,7 +161,7 @@
             //engineInstance.loadPresets(HYPERGAP.presets.getPresets());
             CLOCKWORKRT.collisions.get().map(engineInstance.registerCollision);
             engineInstance.loadComponents(CLOCKWORKRT.components.get());
-            manifest.levels.map(x=>CLOCKWORKRT.API.appPath() + "/" + x).recursiveForEach(function (x, cb) {
+            manifest.levels.map(x => CLOCKWORKRT.API.appPath() + "/" + x).recursiveForEach(function (x, cb) {
                 var uri = new Windows.Foundation.Uri(x);
                 var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
                     Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
@@ -171,7 +171,7 @@
                     console.log(x);
                 });
             }, 0, function () {
-                if (localStorage.debugMode) {
+                if (localStorage.debugMode == "true") {
                     var socket = io(localStorage.debugFrontend);
                     socket.on('setBreakpoints', function (data) {
                         engineInstance.setBreakpoints(data);
@@ -179,23 +179,39 @@
                     socket.on('continueRequest', function () {
                         engineInstance.debug.continue();
                     });
-                    engineInstance.setBreakpointHandler(function (event, bp, stack, vars, globalvars) {
+                    socket.on('stepOverRequest', function () {
+                        engineInstance.debug.stepOver();
+                    });
+                    socket.on('stepInRequest', function () {
+                        engineInstance.debug.stepIn();
+                    });
+                    socket.on('stepOutRequest', function () {
+                        engineInstance.debug.stepOut();
+                    });
+                    socket.on('connect', function () {
+                        engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
+                    });
+                    engineInstance.setBreakpointHandler(function (event, data) {
                         switch (event) {
                             case 'breakpointHit':
                                 socket.emit('breakpointHit', {
-                                    bp: bp,
-                                    vars: vars,
-                                    engineVars: globalvars,
-                                    stack: stack
+                                    bp: data.bp,
+                                    vars: data.vars,
+                                    engineVars: data.globalvars,
+                                    stack: data.stack
                                 });
                                 break;
                             case 'continue':
                                 socket.emit('continue', {});
                                 break;
+                            case 'error':
+                                socket.emit('exception', {msg:data.msg});
+                                break;
                         }
                     });
+                } else {
+                    engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
                 }
-                engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
                 //var semaphorelength = 0;
                 //if (HYPERGAP.CONTROLLER.sendMessage) {
                 //    if (manifest.controllerAssets) {
