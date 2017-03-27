@@ -109,7 +109,7 @@ var Spritesheet = (function () {
                 //We calculate which frame should be drawn
                 //We set k to the first frame of the layer
                 //And we add the duration of the frames until we reach current t
-                var tempt = spritesheet.frames[layer.frames[0]].t, k = 0;
+                var tempt = 0, k = 0;
                 while (tempt < superModulo(object.t, layer.t)) {
                     var thisframe = spritesheet.frames[layer.frames[k]];
                     //If the duration of a frame is set to 0 it stops there
