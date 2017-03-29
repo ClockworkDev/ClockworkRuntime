@@ -45,6 +45,9 @@ var Spritesheet = (function () {
     //This variable allows to reverse all the animations
     var goesbackwards = false;
 
+    var debugMode = false;
+    var debugHandler;
+
     //Holds the spritesheet: Player, enemy1...
     function spritesheet() {
         this.name = "";
@@ -217,7 +220,15 @@ var Spritesheet = (function () {
                     }
 
                     //If it is a 'custom' frame, we execute the code
-                    frame.code(xposition, yposition, object.t, context, object.vars);
+                    if (debugMode) {
+                        try {
+                            frame.code(xposition, yposition, object.t, context, object.vars);
+                        } catch (e) {
+                            debugHandler("Exception executing frame "+frame.name+" of "+spritesheet.name+" : "+e.message);
+                        }
+                    } else {
+                        frame.code(xposition, yposition, object.t, context, object.vars);
+                    }
 
                 }
 
@@ -734,6 +745,10 @@ var Spritesheet = (function () {
             context.setTransform(zoom, 0, 0, zoom, 0, 0);
             buffercanvas.width = buffer_w / zoom;
             buffercanvas.height = buffer_h / zoom;
+        },
+        debug: function (handler) {
+            debugMode = true;
+            debugHandler = handler;
         }
     };
 

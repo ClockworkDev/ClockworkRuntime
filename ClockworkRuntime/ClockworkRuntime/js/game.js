@@ -197,6 +197,9 @@
                             result: engineInstance.debug.eval(data.expression)
                         });
                     });
+                    animLib.debug(function (message) {
+                        socket.emit('exception', { msg: message });
+                    });
                     engineInstance.setBreakpointHandler(function (event, data) {
                         switch (event) {
                             case 'breakpointHit':
