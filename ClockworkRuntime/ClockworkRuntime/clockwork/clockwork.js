@@ -110,7 +110,7 @@ var Clockwork = (function () {
 *
 */
     this.setup = function () {
-        objects.asyncForEach(function (x, cb) {
+        objects.map(function (x) { return x }).asyncForEach(function (x, cb) { //Create a copy of the objects list, so that objects spawned during #setup wont be initialized twice
             var lock = loadQueue(cb);//When everything is unlocked, execute the callback and iterate to the next
             lock.loader = clockwork.loader;
             x.execute_event("#setup", lock);
@@ -848,8 +848,8 @@ var Clockwork = (function () {
             if (o.sprite != null) {
                 object.sprite = o.sprite;
             }
-            if (o.isstatic != null) {
-                object.isstatic = o.isstatic;
+            if (o.isstatic != null && o.isstatic != "false") {
+                object.isstatic = true;
             }
             object.setVar("$x", o.x);
             object.setVar("$y", o.y);
