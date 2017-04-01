@@ -1,0 +1,107 @@
+﻿button {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+}
+
+.menu {
+    background: #222;
+    border: #333 1px solid;
+    padding: 0px;
+    position: absolute;
+    min-width: 100px;
+    left: 50px;
+    top: 50px;
+    overflow: hidden;
+    /*transition: all 1s ease-out;*/
+}
+
+.handle {
+    margin: 0px;
+    width: calc( 100% - 20px );
+    height: 20px;
+    display: block;
+    background-color: #444;
+    cursor: move;
+    color: #AAA;
+    padding-left: 5px;
+}
+
+.minimize {
+    margin: 0px;
+    width: 20px;
+    height: 20px;
+    display: block;
+    background-color: #333;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    color: white;
+    line-height: 20px;
+    text-align: center;
+    -webkit-user-select: none;
+}
+
+    .minimize:hover {
+        background: #444;
+    }
+
+    .minimize:active {
+        background: #555;
+    }
+
+.menu .button {
+    margin: 10px;
+    width: calc( 100% -20px );
+    background: #333;
+    display: block;
+    color: #FFF;
+    line-height: 40px;
+    text-align: center;
+    border: 1px solid #444;
+    transition: all 100ms ease-in 0ms;
+    -webkit-user-select: none;
+}
+
+    .menu .button:hover {
+        background: #444;
+    }
+
+    .menu .button:active {
+        background: #555;
+        border: 1px white solid;
+    }
+
+.menu .disabled {
+    background: #252525;
+    color: #AAA;
+    border: 1px solid #333;
+}
+
+    .menu .disabled:hover {
+        background: #252525;
+    }
+
+    .menu .disabled:active {
+        background: #252525;
+        border: 1px red dashed;
+    }
+
+.menu .label {
+    color: white;
+    margin: 10px;
+}
+
+.menu select {
+    margin: 10px;
+    width: calc( 100% - 20px );
+}
+
+hr {
+    border: #444 solid 1px;
+}
+
+.textInputBlock {
+    color: white;
+    display: block;
+    margin: 10px;
+}

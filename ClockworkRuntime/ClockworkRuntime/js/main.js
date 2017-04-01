@@ -9,7 +9,9 @@ Windows.UI.WebUI.WebUIApplication.addEventListener('activated', function (args) 
                 break;
             case "/debug":
                 var appName = args.uri.queryParsed.filter(x=>x.name == "app")[0].value;
-                CLOCKWORKRT.apps.debugApp(appName, "http://" + args.uri.host + ":" + args.uri.port);
+                var levelEditorEnabled = args.uri.queryParsed.filter(x => x.name == "levelEditor")[0].value;
+                console.log(args.uri.absoluteCanonicalUri);
+                CLOCKWORKRT.apps.debugApp(appName, "http://" + args.uri.host + ":" + args.uri.port, levelEditorEnabled);
                 break;
             default:
 

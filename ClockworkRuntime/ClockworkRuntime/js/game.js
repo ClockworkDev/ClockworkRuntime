@@ -2,6 +2,9 @@
 
 (function () {
     window.onload = function () {
+        if (localStorage.levelEditor === "true") {
+            //loadLevelEditor();
+        }
 
         Object.defineProperty(Array.prototype, 'recursiveForEach', {
             enumerable: false,

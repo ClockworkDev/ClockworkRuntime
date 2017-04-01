@@ -162,20 +162,41 @@ CLOCKWORKRT.apps.launchApp = function (name) {
     window.location = "game.html";
 }
 
-CLOCKWORKRT.apps.debugApp = function (name, debugFrontend) {
+CLOCKWORKRT.apps.debugApp = function (name, debugFrontend,levelEditor) {
     var manifest = CLOCKWORKRT.apps.getInstalledApps().filter(x=>x.name == name)[0];
     localStorage.currentAppName = manifest.name;
     localStorage.currentAppScope = manifest.scope;
     localStorage.currentAppManifest = JSON.stringify(manifest);
     localStorage.debugMode = true;
     localStorage.debugFrontend = debugFrontend;
+    localStorage.levelEditor = levelEditor;
     window.location = "game.html";
 }
 
 CLOCKWORKRT.apps.reset = function (name) {
     localStorage.clear();
+    var localFolder = Windows.Storage.ApplicationData.current.localFolder.getFoldersAsync().done(function (folders) {
+        folders.forEach(function (f) {
+            f.deleteAsync();
+        });
+    });
     CLOCKWORKRT.API.loadMenu();
+
+    function emptyFolder(f) {
+        Windows.Storage.ApplicationData.current.localFolder.getFoldersAsync().done(function (folders) {
+            folders.forEach(function (f) {
+                emptyFolder(f);
+                f.deleteAsync()
+            });
+        });
+        Windows.Storage.ApplicationData.current.localFolder.getFilesAsync().done(function (folders) {
+            folders.forEach(function (f) {
+                f.deleteAsync();
+            });
+        });
+    }
 }
+
 
 CLOCKWORKRT.apps.installDependency = function (name, version, callback) {
     var localFolder = Windows.Storage.ApplicationData.current.localFolder;
