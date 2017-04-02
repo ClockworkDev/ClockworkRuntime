@@ -164,9 +164,10 @@ var Clockwork = (function () {
 
 
     /**
-*Gets an object
-*@param {Object} variable - The object handler
-*/
+    *Gets an object using its handler
+    *@param {Object} i - The handler
+    * @returns The object
+    */
     this.getObject = function (variable) {
         return objects[variable];
     };
@@ -421,6 +422,7 @@ var Clockwork = (function () {
                     if (deferringActionsBecausePaused) {
                         return pushActionQueue((function () { return this.execute_event(name, args); }).bind(this));
                     }
+                    console.log({ component: this.vars["#name"], event: name, object: this });
                     eventStack.push({ component: this.vars["#name"], event: name, object: this });
                     for (var bp of breakpoints) {
                         if (eventLoopPaused != true && name == bp.event && this.instanceOf(bp.component)) {
@@ -596,6 +598,9 @@ var Clockwork = (function () {
                 },
                 set: function (target, name, value) {
                     return target.setVar(name, value);
+                },
+                ownKeys: function (target) {
+                    return Object.getOwnPropertyNames(target.vars);
                 }
             });
         } else if (object.setEngineVar) { //The engine itself
@@ -605,6 +610,9 @@ var Clockwork = (function () {
                 },
                 set: function (target, name, value) {
                     return target.setEngineVar(name, value);
+                },
+                enumerate: function(target) {
+                    return Object.keys(target).filter(function (key) { return key.indexOf("_#") != 0; })[Symbol.iterator]()
                 }
             });
         }
@@ -676,6 +684,8 @@ var Clockwork = (function () {
         object.setVar("$x", x || 0);
         object.setVar("$y", y || 0);
         object.setVar("$z", z || 0);
+        object.type = kind;
+        object.isstatic = !(isStatic);
         if (object.sprite != undefined) {
             object.spriteholder = animationEngine.addObject(object.sprite, object.getVar("$state"), x || 0, y || 0, z || 0, isStatic || false, timeTravels || false);
         }
@@ -702,7 +712,7 @@ var Clockwork = (function () {
     }
 
     this.listObjects = function () {
-        return objects.map(function (x) { return x.getVar("#name") });
+        return objects.filter(function (x) { return x; });
     }
 
     /**
@@ -845,6 +855,7 @@ var Clockwork = (function () {
             if (object == null) {
                 return null;
             }
+            object.type = o.type;
             if (o.sprite != null) {
                 object.sprite = o.sprite;
             }
@@ -887,14 +898,7 @@ var Clockwork = (function () {
     }
 
 
-    /**
-    *Gets an object using its handler
-    *@param {Object} i - The handler
-    * @returns The object
-    */
-    this.getObject = function (i) {
-        return objects[i];
-    };
+
     //...................
     //     Sprites
     //...................
@@ -1155,7 +1159,7 @@ var Clockwork = (function () {
     function hitBreakpoint(bp, object) {
         //The object references in the event stack is erased so Socket.io wont try to serialize it (it breaks because of the do proxy)
         breakpointHandler("breakpointHit", {
-            bp: bp, stack: eventStack.map(function (x) { return { component: x.component, event:x.event}; }), vars: object.vars, globalvars: globalvars
+            bp: bp, stack: eventStack.map(function (x) { return { component: x.component, event: x.event }; }), vars: object.vars, globalvars: clockwork.var
         });
     }
 
@@ -1187,10 +1191,14 @@ var Clockwork = (function () {
     }
 
     this.debug.eval = function (expression) {
+        var previousState = deferringActionsBecausePaused;
+        deferringActionsBecausePaused = false;
         try {
             return JSON.stringify((new Function("return " + expression)).bind(getCurrentPausedObject())());
         } catch (e) {
             return e.message;
+        } finally {
+            deferringActionsBecausePaused = previousState;
         }
     }
 
@@ -1202,7 +1210,7 @@ var Clockwork = (function () {
 
     function getCurrentPausedObject() {
         var currentNode = eventTreeSnapshot;
-        while (currentNode.child) { 
+        while (currentNode.child) {
             currentNode = currentNode.child;
         }
         return currentNode.object;

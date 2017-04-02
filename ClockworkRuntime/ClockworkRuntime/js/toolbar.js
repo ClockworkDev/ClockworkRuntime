@@ -6,8 +6,8 @@
         var toolbar = document.createElement('div');
         toolbar.id = 'toolbar' + i;
         toolbar.className = 'menu';
-        toolbar.style.left = 50 + 150 * i;
-        toolbar.style.top = 50;
+        toolbar.style.left = 50 + 150 * i + "px";
+        toolbar.style.top = 50 + "px";
         document.body.appendChild(toolbar);
 
         var handle = document.createElement('div');

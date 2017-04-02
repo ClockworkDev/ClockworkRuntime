@@ -53,7 +53,7 @@
     <MinimumVisualStudioVersion>$(VersionNumberMajor).$(VersionNumberMinor)</MinimumVisualStudioVersion>
     <DefaultLanguage>en-US</DefaultLanguage>
     <PackageCertificateKeyFile>ClockworkRuntime_StoreKey.pfx</PackageCertificateKeyFile>
-    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <AppxBundle>Always</AppxBundle>
     <AppxBundlePlatforms>neutral</AppxBundlePlatforms>
     <PackageCertificateThumbprint>449864BFF4669BB7E747CD2C8B158B19F149F377</PackageCertificateThumbprint>
@@ -63,8 +63,12 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="ClockworkRuntime_StoreKey.pfx" />
+    <Content Include="assets\genericObject.png" />
     <Content Include="clockwork\clockwork.js" />
     <Content Include="clockwork\emptyAnimationProxy.js" />
+    <Content Include="clockwork\levelEditorComponents.js" />
+    <Content Include="clockwork\levelEditorSpritesheets.xml" />
+    <Content Include="clockwork\mouseComponent.js" />
     <Content Include="clockwork\spritesheet.js" />
     <Content Include="css\default.css" />
     <Content Include="css\levelEditor.css" />

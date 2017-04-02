@@ -293,7 +293,11 @@ var Spritesheet = (function () {
 
             if (thisspritesheet.getAttributeNode("src") != undefined) {
                 newspritesheet.img = new Image()
-                newspritesheet.img.src = (workingFolder + thisspritesheet.getAttributeNode("src").value);
+                if (workingFolder) {
+                    newspritesheet.img.src = (workingFolder + "/" + thisspritesheet.getAttributeNode("src").value);
+                } else {
+                    newspritesheet.img.src = (thisspritesheet.getAttributeNode("src").value);
+                }
             }
 
             var framesxml = thisspritesheet.getElementsByTagName("frames")[0];
@@ -478,7 +482,11 @@ var Spritesheet = (function () {
                 newspritesheet.name = s.name;
                 if (s.src != undefined) {
                     newspritesheet.img = new Image()
-                    newspritesheet.img.src = workingFolder + s.src;
+                    if (workingFolder) {
+                        newspritesheet.img.src = (workingFolder + "/" + s.src);
+                    } else {
+                        newspritesheet.img.src = s.src;
+                    }
                 }
                 for (var name in s.frames) {
                     var f = s.frames[name];
@@ -494,6 +502,7 @@ var Spritesheet = (function () {
                             newframe.y = f.y;
                             newframe.w = f.w;
                             newframe.h = f.h;
+                            newframe.t = f.t;
                         }
                     }
                     newspritesheet.frames.push(newframe);
@@ -738,13 +747,45 @@ var Spritesheet = (function () {
     * @param {String} folder -    The path of the working folder
    */
         setWorkingFolder: function (folder) {
-            workingFolder = folder + "/";
+            workingFolder = folder;
+        },
+        getWorkingFolder: function () {
+            return workingFolder;
         },
         setZoom: function (x) {
             zoom = x;
             context.setTransform(zoom, 0, 0, zoom, 0, 0);
             buffercanvas.width = buffer_w / zoom;
             buffercanvas.height = buffer_h / zoom;
+        },
+        getSpriteBox: function (spritesheet, animationstate) {
+            var minX, maxX, minY, maxY;
+            var spritesheet = searchWhere(spritesheets, "name", spritesheet);
+            var state = spritesheet.states[0];
+            if (animationstate != undefined) {
+                state = searchWhere(spritesheet.states, "name", animationstate);
+            }
+            //We loop over the layers of its current state
+            for (var i in state.layers) {
+                var layer_n = state.layers[i];
+                var layer = spritesheet.layers[layer_n];
+                for (var j in layer.frames) {
+                    var frame = spritesheet.frames[layer.frames[j]];
+                    if (frame.x < minX || minX == undefined) {
+                        minX = frame.x;
+                    }
+                    if (frame.y < minY || minY == undefined) {
+                        minY = frame.y;
+                    }
+                    if (frame.x + frame.w > maxX || maxX == undefined) {
+                        maxX = frame.x + frame.w;
+                    }
+                    if (frame.y + frame.h > maxY || maxY == undefined) {
+                        maxY = frame.y + frame.h;
+                    }
+                }
+            }
+            return { x: minX || 0, y: minY || 0, w: (maxX - minX) || 100, h: (maxY - minY) || 100 };
         },
         debug: function (handler) {
             debugMode = true;
@@ -789,7 +830,9 @@ var Spritesheet = (function () {
         xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                 parser(xmlhttp.responseXML);
-                callback();
+                if (callback) {
+                    callback();
+                }
             }
         }
         xmlhttp.open("GET", url, true);

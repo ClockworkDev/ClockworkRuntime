@@ -2,9 +2,6 @@
 
 (function () {
     window.onload = function () {
-        if (localStorage.levelEditor === "true") {
-            //loadLevelEditor();
-        }
 
         Object.defineProperty(Array.prototype, 'recursiveForEach', {
             enumerable: false,
@@ -175,6 +172,17 @@
                 });
             }, 0, function () {
                 if (localStorage.debugMode == "true") {
+                    if (localStorage.levelEditor === "true") {
+                        engineInstance.registerCollision(mouseCollisions);
+                        engineInstance.loadComponents(levelEditorComponents);
+                        engineInstance.loadComponents(mouseComponent);
+                        //loadLevelEditor(engineInstance);
+                        var wf = animLib.getWorkingFolder();
+                        animLib.setWorkingFolder(null);
+                        animLib.loadSpritesheetXML("clockwork/levelEditorSpritesheets.xml", function () {
+                            animLib.setWorkingFolder(wf);
+                        });
+                    }
                     var socket = io(localStorage.debugFrontend);
                     socket.on('setBreakpoints', function (data) {
                         engineInstance.setBreakpoints(data);
@@ -219,7 +227,7 @@
                             case 'error':
                                 socket.emit('exception', { msg: data.msg });
                                 break;
-                                case 'log':
+                            case 'log':
                                 socket.emit('log', { msg: data });
                                 break;
                         }

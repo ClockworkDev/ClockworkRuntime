@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<spritesheets>
+  <spritesheet name="#genericObject" src="assets/genericObject.png">
+    <states>
+      <state name="object">
+        <layer name="object"></layer>
+      </state>
+    </states>
+    <layers>
+      <layer name="object" x="0" y="0">
+         <frame name="object"></frame>
+      </layer>
+    </layers>
+    <frames>
+      <frame name="object" x="0" y="0" w="100" h="100" t="0"></frame>
+    </frames>
+  </spritesheet>
+
+    <spritesheet name="selectBox" >
+    <states>
+      <state name="hide">
+      </state>
+      <state name="hover">
+      <layer name="hover"></layer>
+      </state>
+      <state name="select">
+      <layer name="select"></layer>
+      </state>
+            <state name="delete">
+      <layer name="delete"></layer>
+      </state>
+    </states>
+    <layers>
+      <layer name="hover" x="0" y="0">
+         <frame name="hover"></frame>
+      </layer>
+      <layer name="select" x="0" y="0">
+         <frame name="select"></frame>
+      </layer>
+            <layer name="delete" x="0" y="0">
+         <frame name="delete"></frame>
+      </layer>
+    </layers>
+    <frames>
+      <frame name="hover" x="0" y="0" code="context.beginPath();context.fillStyle = '#FFF';context.globalAlpha=0.4;context.rect(x,y,vars['$w'],vars['$h']);context.fill();" t="0"></frame>
+      <frame name="select" x="0" y="0" code="context.beginPath();context.fillStyle = '#FFF';context.globalAlpha=0.8;context.rect(x,y,vars['$w'],vars['$h']);context.fill();" t="0"></frame>
+      <frame name="delete" x="0" y="0" code="context.beginPath();context.fillStyle = '#F00';context.globalAlpha=0.6;context.rect(x,y,vars['$w'],vars['$h']);context.fill();" t="0"></frame>
+    </frames>
+  </spritesheet>
+
+  <spritesheet name="bg" >
+    <states>
+      <state name="bg">
+      <layer name="bg"></layer>
+      </state>
+    </states>
+    <layers>
+      <layer name="bg" x="0" y="0">
+         <frame name="bg"></frame>
+      </layer>
+    </layers>
+    <frames>
+      <frame name="bg" x="0" y="0" code="context.clearRect(0,0, context.canvas.width, context.canvas.height);" t="0"></frame>
+    </frames>
+  </spritesheet>
+</spritesheets>
