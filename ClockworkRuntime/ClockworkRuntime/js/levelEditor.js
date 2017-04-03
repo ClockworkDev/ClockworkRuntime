@@ -67,6 +67,7 @@ var windows = [
                             x: 0,
                             y: 0,
                             z: -Infinity,
+                            isstatic: true,
                             vars: { "#levelEditor": true }
                         },
                         {
@@ -337,11 +338,11 @@ workspace.updateMoveToolbar = function () {
 
 
 workspace.updateProperties = function () {
-    var object = workspace.engine.getEngineVar("lastObject");
+    var object = workspace.lastObject;
     if (object) {
-        toolbars.setTextValue("properties.xObj", object.getVar("#x"));
-        toolbars.setTextValue("properties.yObj", object.getVar("#y"));
-        toolbars.setTextValue("properties.zObj", object.getVar("#z"));
+        toolbars.setTextValue("properties.xObj", object.getVar("$x"));
+        toolbars.setTextValue("properties.yObj", object.getVar("$y"));
+        toolbars.setTextValue("properties.zObj", object.getVar("$z"));
         toolbars.setTextValue("properties.name", object.getVar("#name"));
         toolbars.setSelectValue("properties.presetSelect", object.getVar("#preset"));
         var keys = object.getVarKeys();

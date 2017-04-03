@@ -422,7 +422,6 @@ var Clockwork = (function () {
                     if (deferringActionsBecausePaused) {
                         return pushActionQueue((function () { return this.execute_event(name, args); }).bind(this));
                     }
-                    console.log({ component: this.vars["#name"], event: name, object: this });
                     eventStack.push({ component: this.vars["#name"], event: name, object: this });
                     for (var bp of breakpoints) {
                         if (eventLoopPaused != true && name == bp.event && this.instanceOf(bp.component)) {

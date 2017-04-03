@@ -1,4 +1,7 @@
 ﻿var CLOCKWORKCONFIG;
+//if (Windows.UI.ViewManagement.ApplicationView.isViewModeSupported(Windows.UI.ViewManagement.ApplicationViewMode.compactOverlay)) {
+//    Windows.UI.ViewManagement.ApplicationView.tryEnterViewModeAsync(Windows.UI.ViewManagement.ApplicationViewMode.compactOverlay);
+//}
 
 (function () {
     window.onload = function () {
@@ -173,15 +176,15 @@
             }, 0, function () {
                 if (localStorage.debugMode == "true") {
                     if (localStorage.levelEditor === "true") {
-                        engineInstance.registerCollision(mouseCollisions);
-                        engineInstance.loadComponents(levelEditorComponents);
-                        engineInstance.loadComponents(mouseComponent);
+                        //engineInstance.registerCollision(mouseCollisions);
+                        //engineInstance.loadComponents(levelEditorComponents);
+                        //engineInstance.loadComponents(mouseComponent);
                         //loadLevelEditor(engineInstance);
-                        var wf = animLib.getWorkingFolder();
-                        animLib.setWorkingFolder(null);
-                        animLib.loadSpritesheetXML("clockwork/levelEditorSpritesheets.xml", function () {
-                            animLib.setWorkingFolder(wf);
-                        });
+                        //var wf = animLib.getWorkingFolder();
+                        //animLib.setWorkingFolder(null);
+                        //animLib.loadSpritesheetXML("clockwork/levelEditorSpritesheets.xml", function () {
+                        //    animLib.setWorkingFolder(wf);
+                        //});
                     }
                     var socket = io(localStorage.debugFrontend);
                     socket.on('setBreakpoints', function (data) {

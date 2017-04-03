@@ -769,23 +769,27 @@ var Spritesheet = (function () {
             for (var i in state.layers) {
                 var layer_n = state.layers[i];
                 var layer = spritesheet.layers[layer_n];
+                var t = 0;
                 for (var j in layer.frames) {
                     var frame = spritesheet.frames[layer.frames[j]];
-                    if (frame.x < minX || minX == undefined) {
-                        minX = frame.x;
+                    var startX = layer.x(t);
+                    var startY = layer.y(t);
+                    if (startX< minX || minX == undefined) {
+                        minX = startX;
                     }
-                    if (frame.y < minY || minY == undefined) {
-                        minY = frame.y;
+                    if (startY < minY || minY == undefined) {
+                        minY = startY;
                     }
-                    if (frame.x + frame.w > maxX || maxX == undefined) {
-                        maxX = frame.x + frame.w;
+                    if (frame.w > maxX || maxX == undefined) {
+                        maxX = frame.w;
                     }
-                    if (frame.y + frame.h > maxY || maxY == undefined) {
-                        maxY = frame.y + frame.h;
+                    if (frame.h > maxY || maxY == undefined) {
+                        maxY = frame.h;
                     }
+                    t += frame.t;
                 }
             }
-            return { x: minX || 0, y: minY || 0, w: (maxX - minX) || 100, h: (maxY - minY) || 100 };
+            return { x: minX || 0, y: minY || 0, w: maxX || 100, h: maxY|| 100 };
         },
         debug: function (handler) {
             debugMode = true;

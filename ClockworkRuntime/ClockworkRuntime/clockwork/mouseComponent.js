@@ -6,7 +6,7 @@
                 name: "#setup", code: function (event) {
                     this.setVar("listener_click", this.engine.getEngineVar("#DOM").addEventListener("mousedown", this.do.onclick.bind(this), false));
                     this.setVar("listener_move", this.engine.getEngineVar("#DOM").addEventListener("mousemove", this.do.onmove.bind(this), false));
-                    this.setVar("listener_up", this.engine.getEngineVar("#DOM").addEventListener("mouseup", this.do.mouseup.bind(this), false));
+                    this.setVar("listener_up", this.engine.getEngineVar("#DOM").addEventListener("mouseup", this.engine.do.mouseup, false));
                 }
             },
             {
@@ -26,6 +26,7 @@
                     //cy = (e.clientY - (window.innerHeight - 768 * window.innerWidth / 1366) / 2) * 1366 / window.innerWidth
                     //
                     // Where 1366x768 is the size of the buffer and the virtual game screens
+                    this.do.onmove();
                 }
             },
             {
@@ -44,9 +45,8 @@
                     //      var width = (CLOCKWORKCONFIG.screenbuffer_width * window.innerHeight / CLOCKWORKCONFIG.screenbuffer_height);
                     //      tx = CLOCKWORKCONFIG.screenbuffer_width * (tx - xpos) / width;
                     //  }
-                    var camera = this.engine.getAnimationEngine().getCamera();
-                    this.setVar("#x", +tx + +camera.x);
-                    this.setVar("#y", +ty + +camera.y);
+                    this.setVar("$x", +tx );
+                    this.setVar("$y", +ty );
                     //Warning: Read the previous warning
                 }
             },
@@ -60,8 +60,8 @@
                         this.setVar("timer", 0);
                     }
                     if (this.getVar("timer") == -1) {
-                        this.collision["point"][1].x = this.getVar("#x");
-                        this.collision["point"][1].y = this.getVar("#y");
+                        this.collision["point"][1].x =0;
+                        this.collision["point"][1].y = 0;
                         this.collisionChanged();
                         this.setVar("timer", 1);
                     }
