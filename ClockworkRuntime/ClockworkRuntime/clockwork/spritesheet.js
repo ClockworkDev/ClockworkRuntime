@@ -194,7 +194,16 @@ var Spritesheet = (function () {
                         skip = true;
                     }
                     if (!skip) {
-                        context.drawImage(object.img || spritesheet.img, frame.x, frame.y, frame.w, frame.h, xposition + flipoffsetx, yposition + flipoffsety, frame.w, frame.h);
+                        if (debugMode) {
+                            try {
+                                context.drawImage(object.img || spritesheet.img, frame.x, frame.y, frame.w, frame.h, xposition + flipoffsetx, yposition + flipoffsety, frame.w, frame.h);
+                                frame.code(xposition, yposition, object.t, context, object.vars);
+                            } catch (e) {
+                                debugHandler("Exception drawing frame " + frame.name + " of " + spritesheet.name + " : Maybe the image path is wrong or the coordinates step outside the image.");
+                            }
+                        } else {
+                            context.drawImage(object.img || spritesheet.img, frame.x, frame.y, frame.w, frame.h, xposition + flipoffsetx, yposition + flipoffsety, frame.w, frame.h);
+                        }
                     }
 
                     //If we flipped before then we restore everything
