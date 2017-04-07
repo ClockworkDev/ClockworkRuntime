@@ -4,8 +4,8 @@
         events: [
             {
                 name: "#setup", code: function (event) {
-                    this.setVar("listener_click", this.engine.getEngineVar("#DOM").addEventListener("mousedown", this.do.onclick.bind(this), false));
-                    this.setVar("listener_move", this.engine.getEngineVar("#DOM").addEventListener("mousemove", this.do.onmove.bind(this), false));
+                    this.setVar("listener_click", this.engine.getEngineVar("#DOM").addEventListener("mousedown", this.do.onclick.bind(this)));
+                    this.setVar("listener_move", this.engine.getEngineVar("#DOM").addEventListener("mousemove", this.do.onmove.bind(this)));
                     this.setVar("listener_up", this.engine.getEngineVar("#DOM").addEventListener("mouseup", this.engine.do.mouseup, false));
                 }
             },
@@ -54,15 +54,11 @@
                 name: "#loop", code: function (event) {
                     //We wait one iteration before deleting the click coordinates
                     if (this.getVar("timer") == 1) {
-                        this.collision["point"][1].x = NaN;
-                        this.collision["point"][1].y = NaN;
-                        this.collisionChanged();
+                        this.setCollider("click", { "x": NaN, "y": NaN });
                         this.setVar("timer", 0);
                     }
                     if (this.getVar("timer") == -1) {
-                        this.collision["point"][1].x =0;
-                        this.collision["point"][1].y = 0;
-                        this.collisionChanged();
+                        this.setCollider("click", { "x": 0, "y": 0 });
                         this.setVar("timer", 1);
                     }
                 }
@@ -73,7 +69,7 @@
                 //Coordinates of the pointer
                 { "x": 0, "y": 0 },
                 //Coordinates of the click
-                { "x": NaN, "y": NaN }
+                { "#tag" : "click", "x": NaN, "y": NaN }
             ]
         }
     }

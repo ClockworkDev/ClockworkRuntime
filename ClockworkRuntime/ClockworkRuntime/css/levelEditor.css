@@ -11,7 +11,9 @@
     min-width: 100px;
     left: 50px;
     top: 50px;
-    overflow: hidden;
+    overflow-x: hidden;
+    max-height:90%;
+    overflow-y:auto;
     /*transition: all 1s ease-out;*/
 }
 

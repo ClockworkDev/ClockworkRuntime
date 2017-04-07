@@ -10,6 +10,12 @@ function loadLevelEditor(engine) {
     toolbars.hideToolbar("Properties");
     toolbars.hideToolbar("Level");
     engine.var["_#workspace"] = workspace;
+    //Set components list
+    var options = CLOCKWORKRT.components.get().map(function (x) { return { text: x.name, value: x.name }; });
+
+    toolbars.setSelectOptions("componentSelect", options);
+    toolbars.setSelectOptions("properties.componentSelect", options);
+    workspace.currentComponent = options[0].value;
 }
 
 var windows = [
@@ -36,9 +42,10 @@ var windows = [
                                 default:
                                     return true;
                             }
-                        }).map(function (key) {
-                            return { key: key, value: object.var[key] }
-                        });
+                        }).reduce(function (vars, key) {
+                            vars[key] = object.var[key];
+                            return vars;
+                        }, {});
                         vars["#type"] = object.type;
                         vars["#spritesheet"] = object.sprite;
                         vars["#state"] = object.var.$state;
@@ -91,6 +98,7 @@ var windows = [
                     };
                     workspace.engine.loadLevelsFromJSONobject([currentLevel]);
                     workspace.engine.loadLevelByID("#levelEditor");
+                    workspace.updateObjectList();
                     hideEditAdvanced();
                 }
             }
@@ -150,7 +158,7 @@ var windows = [
                             // if(k[0]=="#"){return;}
                             vars[k] = x.getVar(k);
                         });
-                        // return "<object name='"+x.getVar("#name")+"' type='"+x.getVar("#preset")+"' x='"+x.getVar("#x")+"' y='"+x.getVar("#y")+"' z='"+(x.getVar("#z")||0)+"' vars='"+JSON.stringify(vars)+"'></object>";
+                        // return "<object name='"+x.getVar("#name")+"' type='"+x.getVar("#preset")+"' x='"+x.getVar("$x")+"' y='"+x.getVar("$y")+"' z='"+(x.getVar("$z")||0)+"' vars='"+JSON.stringify(vars)+"'></object>";
                         return vars;
                     });
                     vscodeConnection.saveLevel(workspace.getLevelFile(), workspace.getLevel(), JSON.stringify(objects), function () {
@@ -183,7 +191,7 @@ var windows = [
                 type: "button", text: "New", id: "New", enabled: false, onclick: function () {
                     workspace.currentTool = "new";
                     hideEditAdvanced()
-                    toolbars.showSelect("presetSelect");
+                    toolbars.showSelect("componentSelect");
                     toolbars.showLine("editLine");
                 }
             },
@@ -215,7 +223,7 @@ var windows = [
             },
             { type: "line", id: "editLine" },
             {
-                type: "select", id: "presetSelect", options: [
+                type: "select", id: "componentSelect", options: [
                     { text: "---", value: "#---" }
                 ], onchange: function (value) {
                     workspace.currentPreset = value;
@@ -225,7 +233,7 @@ var windows = [
                 type: "text", id: "xObj", tag: "X coordinate", onchange: function (value) {
                     var object = workspace.engine.getEngineVar("lastObject");
                     if (object) {
-                        object.setVar("#x", value);
+                        object.setVar("$x", value);
                         workspace.engine.execute_event("refreshSelectBox", { x: value });
                     }
                 }
@@ -234,7 +242,7 @@ var windows = [
                 type: "text", id: "yObj", tag: "Y coordinate", onchange: function (value) {
                     var object = workspace.engine.getEngineVar("lastObject");
                     if (object) {
-                        object.setVar("#y", value);
+                        object.setVar("$y", value);
                         workspace.engine.execute_event("refreshSelectBox", { y: value });
                     }
                 }
@@ -264,7 +272,7 @@ var windows = [
             },
             { type: "label", "text": "Type:" },
             {
-                type: "select", id: "properties.presetSelect", options: [
+                type: "select", id: "properties.componentSelect", options: [
                     { text: "---", value: "#---" }
                 ], onchange: function (value) {
                     var object = workspace.engine.getEngineVar("lastObject");
@@ -279,7 +287,7 @@ var windows = [
                 type: "text", id: "properties.xObj", tag: "X coordinate", onchange: function (value) {
                     var object = workspace.engine.getEngineVar("lastObject");
                     if (object) {
-                        object.setVar("#x", value);
+                        object.setVar("$x", value);
                         workspace.engine.execute_event("refreshSelectBox", { x: value });
                     }
                 }
@@ -288,7 +296,7 @@ var windows = [
                 type: "text", id: "properties.yObj", tag: "Y coordinate", onchange: function (value) {
                     var object = workspace.engine.getEngineVar("lastObject");
                     if (object) {
-                        object.setVar("#y", value);
+                        object.setVar("$y", value);
                         workspace.engine.execute_event("refreshSelectBox", { y: value });
                     }
                 }
@@ -297,7 +305,7 @@ var windows = [
                 type: "text", id: "properties.zObj", tag: "Z coordinate", onchange: function (value) {
                     var object = workspace.engine.getEngineVar("lastObject");
                     if (object) {
-                        object.setVar("#z", value);
+                        object.setVar("$z", value);
                     }
                 }
             },
@@ -330,25 +338,26 @@ var windows = [
 workspace.updateMoveToolbar = function () {
     var object = workspace.engine.getEngineVar("lastObject");
     if (object) {
-        toolbars.setTextValue("xObj", object.getVar("#x"));
-        toolbars.setTextValue("yObj", object.getVar("#y"));
+        toolbars.setTextValue("xObj", object.getVar("$x"));
+        toolbars.setTextValue("yObj", object.getVar("$y"));
     }
 }
 
 
 
 workspace.updateProperties = function () {
-    var object = workspace.lastObject;
+    var object = workspace.engine.getEngineVar("lastObject");
     if (object) {
         toolbars.setTextValue("properties.xObj", object.getVar("$x"));
         toolbars.setTextValue("properties.yObj", object.getVar("$y"));
         toolbars.setTextValue("properties.zObj", object.getVar("$z"));
         toolbars.setTextValue("properties.name", object.getVar("#name"));
-        toolbars.setSelectValue("properties.presetSelect", object.getVar("#preset"));
+        toolbars.setSelectValue("properties.componentSelect", object.getVar("#type"));
         var keys = object.getVarKeys();
         toolbars.clearMap("properties.map");
-        keys.forEach(function (k) {
-            if (k[0] == "#") { return }
+        keys.filter(function (k) {
+            return !(k[0] == "#") && k != "$x" && k != "$y" && k != "$z";
+        }).forEach(function (k) {
             var value = object.getVar(k);
             toolbars.addMapEntry("properties.map", function (key, value, oldkey) {
                 var object = workspace.engine.getEngineVar("lastObject");
@@ -365,16 +374,16 @@ workspace.updateProperties = function () {
 
 workspace.updateObjectList = function () {
     var options = workspace.engine.listObjects().filter(function (x) {
-        return workspace.engine.find(x).getVar("#levelEditor") != true;
+        return x.var["#levelEditor"] != true;
     }).map(function (x) {
-        return { text: x, value: x };
+        return { text: x.var["#name"], value: x.var["#name"] };
     })
     toolbars.setSelectOptions("level.objects", options);
     toolbars.setSelectSize("level.objects", options.length);
 }
 
 function hideEditAdvanced() {
-    toolbars.hideSelect("presetSelect");
+    toolbars.hideSelect("componentSelect");
     toolbars.hideLine("editLine");
     toolbars.hideText("xCamera");
     toolbars.hideText("yCamera");

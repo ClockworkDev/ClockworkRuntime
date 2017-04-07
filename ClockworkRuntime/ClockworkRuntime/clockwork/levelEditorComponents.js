@@ -23,16 +23,16 @@
                     }
                     if (this.engine.getObject(event.object).instanceOf("mouse") && event.shape2id == 0) {
                         if (this.var["#editor.moving"] == true) {
-                            this.var.$x = this.engine.getObject(event.object).var.$x - this.var["#editor.mx"];
-                            this.var.$y = this.engine.getObject(event.object).var.$y - this.var["#editor.my"];
-                            this.engine.do.showSelectBox({ type: "select", x: this.var.$x, y: this.var.$y, w: this.var["#boundingBox"].w, h: this.var["#boundingBox"].h, z: this.var.$z - 1 });
-                            this.engine.var["_#workspace"].updateMoveToolbar();
+                            //this.var.$x = this.engine.getObject(event.object).var.$x - this.var["#editor.mx"];
+                            //this.var.$y = this.engine.getObject(event.object).var.$y - this.var["#editor.my"];
+                            //this.engine.do.showSelectBox({ type: "select", x: this.var.$x, y: this.var.$y, w: this.var["#boundingBox"].w, h: this.var["#boundingBox"].h, z: this.var.$z - 1 });
+                            //this.engine.var["_#workspace"].updateMoveToolbar();
                         } else {
-                            if (this.engine.var["_#workspace"].currentTool == "delete") {
-                                this.engine.do.showSelectBox({ type: "delete", x: this.var.$x, y: this.var.$y, w: this.var["#boundingBox"].w, h: this.var["#boundingBox"].h, z: this.var.$z + 1 });
-                            } else {
-                                this.engine.do.showSelectBox({ type: "hover", x: this.var.$x, y: this.var.$y, w: this.var["#boundingBox"].w, h: this.var["#boundingBox"].h, z: this.var.$z - 1 });
-                            }
+                            //if (this.engine.var["_#workspace"].currentTool == "delete") {
+                            //    this.engine.do.showSelectBox({ type: "delete", x: this.var.$x, y: this.var.$y, w: this.var["#boundingBox"].w, h: this.var["#boundingBox"].h, z: this.var.$z + 1 });
+                            //} else {
+                            //    this.engine.do.showSelectBox({ type: "hover", x: this.var.$x, y: this.var.$y, w: this.var["#boundingBox"].w, h: this.var["#boundingBox"].h, z: this.var.$z - 1 });
+                            //}
                         }
                     }
                 }
@@ -53,14 +53,14 @@
             name: "#collide", code: function (event) {
                 if (this.engine.getObject(event.object).instanceOf("mouse") && event.shape2id == 1) {
                     if (this.engine.var["_#workspace"].currentTool == "new") {
-                        var type = this.engine.var["_#workspace"].currentPreset;
-                        var spritesheet = this.engine.var["_#workspace"].presetTable[type] || "objectWithNoSpritesheet";
-                        var that = this;
-                        setTimeout(function () {
-                            var boundingBox = that.engine.getAnimationEngine().getSpriteBox(spritesheet);
-                            that.engine.addObjectLive("something", "object", that.engine.getObject(event.object).getVar("$x"), that.engine.getObject(event.object).getVar("$y"), 0, false, false, { "#preset": type, "#spritesheet": spritesheet, "#boundingBox": boundingBox });
-                            that.engine.var["_#workspace"].updateObjectList();
-                        }, 0);
+                        //var type = this.engine.var["_#workspace"].currentPreset;
+                        //var spritesheet = this.engine.var["_#workspace"].presetTable[type] || "objectWithNoSpritesheet";
+                        //var that = this;
+                        //setTimeout(function () {
+                        //    var boundingBox = that.engine.getAnimationEngine().getSpriteBox(spritesheet);
+                        //    that.engine.addObjectLive("something", "object", that.engine.getObject(event.object).getVar("$x"), that.engine.getObject(event.object).getVar("$y"), 0, false, false, { "#preset": type, "#spritesheet": spritesheet, "#boundingBox": boundingBox });
+                        //    that.engine.var["_#workspace"].updateObjectList();
+                        //}, 0);
                     }
                     if (this.engine.var["_#workspace"].currentTool == "moveCamera" && this.getVar("#editor.moving") != true) {
                         this.setVar("#editor.moving", true);
@@ -88,7 +88,6 @@
                 if (this.engine.var["_#workspace"].currentTool == "moveCamera" && this.getVar("#editor.moving") == true) {
                     this.setVar("#editor.moving", false);
                 }
-
             }
         },
         {
@@ -99,7 +98,7 @@
         }],
         collision: {
             "box": [
-                { "x": 0, "y": 0, "w": Infinity, "h": Infinity }
+                { "x": 0, "y": 0, "w": 9999999, "h": 9999999 }
             ]
         }
     },
@@ -155,7 +154,7 @@
                     selectedArray.sort(function (a, b) {
                         return b.getVar("$z") - a.getVar("$z");
                     });
-                    var that = selectedArray[selectedArray.length - 1];
+                    var that = selectedArray[0];
                     var mouse = this.engine.getEngineVar("mouse");
                     if (this.engine.var["_#workspace"].currentTool == "move" && that.getVar("#editor.moving") == false) {
                         this.engine.setEngineVar("lastObject", that);
@@ -173,7 +172,7 @@
                         this.engine.var["_#workspace"].updateObjectList();
                     }
                     if (this.engine.var["_#workspace"].currentTool == "select") {
-                        this.engine.var["_#workspace"].lastObject = that;
+                        this.engine.var.lastObject = that;
                         this.engine.var["_#workspace"].updateProperties();
                     }
 

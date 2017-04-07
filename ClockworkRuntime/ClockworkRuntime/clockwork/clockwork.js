@@ -487,7 +487,7 @@ var Clockwork = (function () {
     function inheritComponent(name, parent) {
         components[name] = inheritObject(components[parent]);
         components[name].name = name;
-        components[name].parent = name;
+        components[name].parent = parent;
         components[name].prototypes = [components[parent]];
         components[name].vars = inheritObject(components[parent].vars);
         components[name].eventfunction = inheritObject(components[parent].eventfunction);
