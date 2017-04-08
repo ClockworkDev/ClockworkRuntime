@@ -64,7 +64,7 @@
     </AppxManifest>
     <None Include="ClockworkRuntime_StoreKey.pfx" />
     <Content Include="assets\genericObject.png" />
-    <Content Include="clockwork\clockwork.js" />
+    <Content Include="clockworkCore\clockwork.js" />
     <Content Include="clockwork\emptyAnimationProxy.js" />
     <Content Include="clockwork\levelEditorComponents.js" />
     <Content Include="clockwork\levelEditorSpritesheets.xml" />
