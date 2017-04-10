@@ -1,3 +1,6 @@
 [submodule "ClockworkRuntime/ClockworkRuntime/clockworkCore"]
 	path = ClockworkRuntime/ClockworkRuntime/clockworkCore
 	url = https://github.com/ClockworkDev/ClockworkCore
+[submodule "ClockworkRuntime\\ClockworkRuntime\\spritesheet"]
+	path = ClockworkRuntime\\ClockworkRuntime\\spritesheet
+	url = https://github.com/ClockworkDev/Spritesheet.js

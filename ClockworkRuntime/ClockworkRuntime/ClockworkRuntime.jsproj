@@ -67,9 +67,9 @@
     <Content Include="clockworkCore\clockwork.js" />
     <Content Include="clockwork\emptyAnimationProxy.js" />
     <Content Include="clockwork\levelEditorComponents.js" />
-    <Content Include="clockwork\levelEditorSpritesheets.xml" />
+    <Content Include="clockwork\levelEditorSpritesheets.js" />
     <Content Include="clockwork\mouseComponent.js" />
-    <Content Include="clockwork\spritesheet.js" />
+    <Content Include="spritesheet\spritesheet.js" />
     <Content Include="css\default.css" />
     <Content Include="css\levelEditor.css" />
     <Content Include="css\menu.css" />

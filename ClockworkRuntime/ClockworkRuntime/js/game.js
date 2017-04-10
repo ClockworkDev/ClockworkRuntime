@@ -109,10 +109,16 @@
                     setUpEngine(container, noAnimation());
                     break;
                 default:
-                    document.getElementById("canvas").style.width = window.innerWidth;
-                    document.getElementById("canvas").style.height = window.innerHeight;
-                    document.getElementById("canvas").width = window.innerWidth;
-                    document.getElementById("canvas").height = window.innerHeight;
+                    var canvas = document.getElementById("canvas");
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    canvas.style = "position:absolute;top:0px;left:0px;margin:0px;width:100%;height:100%;";
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    window.onresize = function () {
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                    };
                     setUpAnimation(function (animLib) { setUpEngine(document.getElementById("canvas"), animLib); });
                     break;
             }
@@ -139,7 +145,6 @@
                 }
                 contextoutput.drawImage(contextinput.canvas, xpos, ypos, width, height);
             });
-            canvasAnimation.setFullScreen();
             canvasAnimation.setWorkingFolder("ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope);
             manifest.spritesheets.recursiveForEach(function (file, cb) {
                 var uri = new Windows.Foundation.Uri(CLOCKWORKRT.API.appPath() + "/" + file);
@@ -182,9 +187,8 @@
                         loadLevelEditor(engineInstance);
                         var wf = animLib.getWorkingFolder();
                         animLib.setWorkingFolder(null);
-                        animLib.loadSpritesheetXML("clockwork/levelEditorSpritesheets.xml", function () {
-                            animLib.setWorkingFolder(wf);
-                        });
+                        animLib.loadSpritesheetJSONObject(levelEditorSpriteseets);
+                        animLib.setWorkingFolder(wf);
                     }
                     var socket = io(localStorage.debugFrontend);
                     socket.on('setBreakpoints', function (data) {
