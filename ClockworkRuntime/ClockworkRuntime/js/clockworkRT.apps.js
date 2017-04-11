@@ -206,12 +206,16 @@ CLOCKWORKRT.apps.installDependency = function (name, version, callback) {
     var request = new XMLHttpRequest();
     request.onreadystatechange = function () {
         if (this.readyState === 4) {
-            var packageContent=this.responseText;
-            navigatePath(localFolder, pathFolders, function (folder) {
-                folder.createFileAsync(filename, Windows.Storage.CreationCollisionOption.replaceExisting).then(function (file) {
-                    Windows.Storage.FileIO.writeTextAsync(file, packageContent).then(callback);
+            var packageContent = this.responseText;
+            if (packageContent == "") {
+                CLOCKWORKRT.apps.installDependency(name, version, callback);
+            } else {
+                navigatePath(localFolder, pathFolders, function (folder) {
+                    folder.createFileAsync(filename, Windows.Storage.CreationCollisionOption.replaceExisting).then(function (file) {
+                        Windows.Storage.FileIO.writeTextAsync(file, packageContent).then(callback);
+                    });
                 });
-            });
+            }
         }
     };
     request.open('GET', `http://cwpm.azurewebsites.net/api/packages/${name}/${version}`, true);
