@@ -149,7 +149,7 @@
                 }
                 contextoutput.drawImage(contextinput.canvas, xpos, ypos, width, height);
             });
-            canvasAnimation.setWorkingFolder("ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope);
+            canvasAnimation.setWorkingFolder(CLOCKWORKRT.API.appPath());
             manifest.spritesheets.recursiveForEach(function (file, cb) {
                 loadTextFile(CLOCKWORKRT.API.appPath() + "/" + file, function (x) {
                     canvasAnimation.loadSpritesheetJSONObject(JSON.parse(x));
