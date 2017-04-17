@@ -1,9 +1,5 @@
-﻿var CLOCKWORKCONFIG;
-//if (Windows.UI.ViewManagement.ApplicationView.isViewModeSupported(Windows.UI.ViewManagement.ApplicationViewMode.compactOverlay)) {
-//    Windows.UI.ViewManagement.ApplicationView.tryEnterViewModeAsync(Windows.UI.ViewManagement.ApplicationViewMode.compactOverlay);
-//}
-
-(function () {
+﻿(function () {
+    var CLOCKWORKCONFIG;
     window.onload = function () {
 
         Object.defineProperty(Array.prototype, 'recursiveForEach', {
@@ -23,7 +19,7 @@
 
         document.body.style["background-color"] = manifest.backgroundColor || "black";
 
-        //List of components, only two operations are allowed: push and read
+        //List of components, only two operations are allowed: register and get
         CLOCKWORKRT.components = (function () {
             var list = [];
             return {
@@ -43,7 +39,7 @@
             };
         })();
 
-        //List of components, only two operations are allowed: push and read
+        //List of components, only two operations are allowed: register and get
         CLOCKWORKRT.collisions = (function () {
             var list = [];
             return {
@@ -59,6 +55,29 @@
                 },
                 get: function () {
                     return list;
+                }
+            };
+        })();
+
+        //List of rendering libraries, plus rendering pipeline
+        CLOCKWORKRT.rendering = (function () {
+            var renderingLibraries = {
+                spritesheet: Spritesheet
+            };
+            var renderingPipeline = ["spritesheet"]; //By default, the rendering library used is Spritesheet.js
+            return {
+                register: function (name, constructor) {
+                    renderingLibraries[name] = constructor;
+                },
+                get: function (name) {
+                    return renderingLibraries[name];
+                },
+                setPipeline: function (pipeline) {
+                    //This pipeline is an array with all the rendering librarie that have to be used
+                    renderingPipeline = pipeline;
+                },
+                getPipeline: function () {
+                    return renderingPipeline;
                 }
             };
         })();
@@ -83,51 +102,36 @@
                 CLOCKWORKRT.apps = undefined;
             }
             manifest.components.recursiveForEach(function (file, cb) {
-                var uri = new Windows.Foundation.Uri(CLOCKWORKRT.API.appPath() + "/" + file);
-                var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
-                    Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
-                        eval(x); //Dirty AF
-                        cb();
-                    });
-                }, function (x) {
-                    console.log(x);
+                loadTextFile(CLOCKWORKRT.API.appPath() + "/" + file, function (x) {
+                    eval(x); //Dirty AF
+                    cb();
                 });
-
-                //script.type = 'text/javascript';
-                //script.src = HYPERGAP.API.appPath() + "/" + x;
-                //document.body.appendChild(script);
             }, 0, readyToGo);
         }
 
         function readyToGo() {
-            switch (manifest.renderer) {
-                case "HTML":
-                    document.body.removeChild(document.getElementById("canvas"));
-                    var container = document.createElement("div");
-                    container.classList.add("fullScreen")
-                    document.body.appendChild(container);
-                    setUpEngine(container, noAnimation());
-                    break;
-                default:
-                    var canvas = document.getElementById("canvas");
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                    canvas.style = "position:absolute;top:0px;left:0px;margin:0px;width:100%;height:100%;";
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                    window.onresize = function () {
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                    };
-                    setUpAnimation(function (animLib) { setUpEngine(document.getElementById("canvas"), animLib); });
-                    break;
-            }
+            var pipeline = CLOCKWORKRT.rendering.getPipeline().map(function (x) { return CLOCKWORKRT.rendering.get(x)(); });
+            pipeline.reduce(function (x, y) {
+                x.chainWith(y);
+            });
+            var canvas = document.getElementById("canvas");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style = "position:absolute;top:0px;left:0px;margin:0px;width:100%;height:100%;";
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            window.onresize = function () {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            };
+            setUpAnimation(pipeline[0], canvas, function (animLib) { setUpEngine(canvas, animLib); });
         }
 
 
-        function setUpAnimation(callback) {
-            var canvasAnimation = new Spritesheet();
-            canvasAnimation.setUp(document.getElementById("canvas"), CLOCKWORKCONFIG.animationfps);
+
+        function setUpAnimation(animlib, canvas, callback) {
+            var canvasAnimation = animlib;
+            canvasAnimation.setUp(canvas, CLOCKWORKCONFIG.animationfps);
             canvasAnimation.setBufferSize(CLOCKWORKCONFIG.screenbuffer_width, CLOCKWORKCONFIG.screenbuffer_height);
             canvasAnimation.setRenderMode(function (contextinput, contextoutput) {
                 contextoutput.clearRect(0, 0, contextoutput.canvas.width, contextoutput.canvas.height);
@@ -147,14 +151,9 @@
             });
             canvasAnimation.setWorkingFolder("ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope);
             manifest.spritesheets.recursiveForEach(function (file, cb) {
-                var uri = new Windows.Foundation.Uri(CLOCKWORKRT.API.appPath() + "/" + file);
-                var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
-                    Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
-                        canvasAnimation.loadSpritesheetJSONObject(JSON.parse(x));
-                        cb();
-                    });
-                }, function (x) {
-                    console.log(x);
+                loadTextFile(CLOCKWORKRT.API.appPath() + "/" + file, function (x) {
+                    canvasAnimation.loadSpritesheetJSONObject(JSON.parse(x));
+                    cb();
                 });
             }, 0, (function (c) { return function () { callback(c) }; })(canvasAnimation));
         }
@@ -164,19 +163,11 @@
             var engineInstance = new Clockwork();
             CLOCKWORKCONFIG.engine = engineInstance;
             engineInstance.setAnimationEngine(animLib);
-            //manifest.dependencies.collisions.map(x=> HYPERGAP.LIBRARIES.getIncludedCollisions()[x]).filter(x=>x).forEach(engineInstance.registerCollision);
-            //manifest.dependencies.presets.map(x=> HYPERGAP.LIBRARIES.getIncludedPresets()[x]).filter(x=>x).forEach(engineInstance.loadPresets);
-            //engineInstance.loadPresets(HYPERGAP.presets.getPresets());
             CLOCKWORKRT.collisions.get().map(engineInstance.registerCollision);
             engineInstance.loadComponents(CLOCKWORKRT.components.get());
             manifest.levels.map(x => CLOCKWORKRT.API.appPath() + "/" + x).recursiveForEach(function (x, cb) {
-                var uri = new Windows.Foundation.Uri(x);
-                var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
-                    Windows.Storage.FileIO.readTextAsync(file).done(function (x) {
-                        engineInstance.loadLevelsFromJSONobject(JSON.parse(x), cb);
-                    });
-                }, function (x) {
-                    console.log(x);
+                loadTextFile(x, function (x) {
+                    engineInstance.loadLevelsFromJSONobject(JSON.parse(x), cb);
                 });
             }, 0, function () {
                 if (localStorage.debugMode == "true") {
@@ -242,52 +233,7 @@
                 } else {
                     engineInstance.start(CLOCKWORKCONFIG.enginefps, container);
                 }
-                //var semaphorelength = 0;
-                //if (HYPERGAP.CONTROLLER.sendMessage) {
-                //    if (manifest.controllerAssets) {
-                //        semaphorelength = manifest.controllerAssets.spritesheets.length + manifest.controllerAssets.presets.length + manifest.controllerAssets.levels.length;
-                //        manifest.controllerAssets.spritesheets.map(x=>"ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope + "/" + x).forEach(function (x) {
-                //            loadFileText(x, function (text) {
-                //                HYPERGAP.CONTROLLER.sendMessageToNewControllers("RegisterSpritesheet~" + text);
-                //                semaphorelength--;
-                //                evalSemaphore();
-                //            });
-                //        });
-                //        manifest.controllerAssets.presets.map(x=>"ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope + "/" + x).forEach(function (x) {
-                //            loadFileText(x, function (text) {
-                //                HYPERGAP.CONTROLLER.sendMessageToNewControllers("RegisterPreset~" + text);
-                //                semaphorelength--;
-                //                evalSemaphore();
-                //            });
-                //        });
-                //        manifest.controllerAssets.levels.map(x=>"ms-appdata:///local/installedApps/" + manifest.name + "/" + manifest.scope + "/" + x).forEach(function (x) {
-                //            loadFileText(x, function (text) {
-                //                HYPERGAP.CONTROLLER.sendMessageToNewControllers("RegisterLevels~" + text);
-                //                semaphorelength--;
-                //                evalSemaphore();
-                //            });
-                //        });
-                //    }
-                //}
-                evalSemaphore();
-                function evalSemaphore() {
-                    //if (semaphorelength == 0) {
-                    //    HYPERGAP.CONTROLLER.sendMessageToNewControllers("LoadLevel~" + (manifest.controller || "HyperGapMenu"));
-                    //}
-                }
             });
-        }
-
-
-        function loadFileText(url, callback) {
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    callback(xmlhttp.responseText);
-                }
-            };
-            xmlhttp.open("GET", url, true);
-            xmlhttp.send();
         }
 
     };

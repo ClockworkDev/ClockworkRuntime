@@ -69,6 +69,7 @@
     <Content Include="clockwork\levelEditorComponents.js" />
     <Content Include="clockwork\levelEditorSpritesheets.js" />
     <Content Include="clockwork\mouseComponent.js" />
+    <Content Include="js\platformUtils.js" />
     <Content Include="spritesheet\spritesheet.js" />
     <Content Include="css\default.css" />
     <Content Include="css\levelEditor.css" />
