@@ -74,8 +74,9 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                                     if (currentfile > nentries) {
                                         CLOCKWORKRT.ui.hideLoader();
                                         callback();
+                                    } else {
+                                        cb();
                                     }
-                                    cb();
                                     return;
                                 }
                                 console.log("creating " + filename);
@@ -96,8 +97,9 @@ CLOCKWORKRT.apps.installAppFromBlob = function (blob,callback) {
                                                     if (currentfile > nentries) {
                                                         CLOCKWORKRT.ui.hideLoader();
                                                         callback();
+                                                    } else {
+                                                        cb();
                                                     }
-                                                    cb();
                                                 });
                                             });
                                         });
