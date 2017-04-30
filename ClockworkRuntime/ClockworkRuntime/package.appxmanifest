@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="58996ARCADIOGARCA.ClockworkRuntime" Version="1.0.2.0" Publisher="CN=5F63796F-84F4-4C45-860F-616E76512FFB" />
+  <Identity Name="58996ARCADIOGARCA.ClockworkRuntime" Version="1.0.3.0" Publisher="CN=5F63796F-84F4-4C45-860F-616E76512FFB" />
   <mp:PhoneIdentity PhoneProductId="46559c14-9fbc-4739-8924-8d52f970a090" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Clockwork Runtime</DisplayName>
@@ -26,6 +26,15 @@
         <uap:SplashScreen Image="images\splashscreen.png" BackgroundColor="#FFFFFF" />
       </uap:VisualElements>
       <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="clockworkpackage">
+            <uap:DisplayName>Clockwork Package</uap:DisplayName>
+            <uap:EditFlags OpenIsSafe="true" />
+            <uap:SupportedFileTypes>
+              <uap:FileType>.cw</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
         <uap:Extension Category="windows.protocol">
           <uap:Protocol Name="cwrt">
             <uap:DisplayName>Clockwork Runtime</uap:DisplayName>

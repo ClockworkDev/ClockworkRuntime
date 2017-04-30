@@ -172,14 +172,14 @@
             }, 0, function () {
                 if (localStorage.debugMode == "true") {
                     if (localStorage.levelEditor === "true") {
-                        engineInstance.registerCollision(mouseCollisions);
-                        engineInstance.loadComponents(levelEditorComponents);
-                        engineInstance.loadComponents(mouseComponent);
-                        loadLevelEditor(engineInstance);
-                        var wf = animLib.getWorkingFolder();
-                        animLib.setWorkingFolder(null);
-                        animLib.loadSpritesheetJSONObject(levelEditorSpriteseets);
-                        animLib.setWorkingFolder(wf);
+                        //engineInstance.registerCollision(mouseCollisions);
+                        //engineInstance.loadComponents(levelEditorComponents);
+                        //engineInstance.loadComponents(mouseComponent);
+                        //loadLevelEditor(engineInstance);
+                        //var wf = animLib.getWorkingFolder();
+                        //animLib.setWorkingFolder(null);
+                        //animLib.loadSpritesheetJSONObject(levelEditorSpriteseets);
+                        //animLib.setWorkingFolder(wf);
                     }
                     var socket = io(localStorage.debugFrontend);
                     socket.on('setBreakpoints', function (data) {
