@@ -26,24 +26,24 @@
         <uap:SplashScreen Image="images\splashscreen.png" BackgroundColor="#FFFFFF" />
       </uap:VisualElements>
       <Extensions>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name="clockworkpackage">
-            <uap:DisplayName>Clockwork Package</uap:DisplayName>
-            <uap:EditFlags OpenIsSafe="true" />
-            <uap:SupportedFileTypes>
-              <uap:FileType>.cw</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
         <uap:Extension Category="windows.protocol">
           <uap:Protocol Name="cwrt">
             <uap:DisplayName>Clockwork Runtime</uap:DisplayName>
           </uap:Protocol>
+        </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="clockworkpackage">
+            <uap:DisplayName>Clockwork Package</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.cw</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
         </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
   <Capabilities>
     <Capability Name="internetClient" />
+    <Capability Name="internetClientServer" />
   </Capabilities>
 </Package>
