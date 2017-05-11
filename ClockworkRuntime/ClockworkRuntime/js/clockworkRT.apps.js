@@ -201,27 +201,33 @@ CLOCKWORKRT.apps.reset = function (name) {
 
 
 CLOCKWORKRT.apps.installDependency = function (name, version, callback) {
-    var localFolder = Windows.Storage.ApplicationData.current.localFolder;
-    var path = `installedDependencies/${name}/${version}.js`
-    var pathFolders = path.split("/");
-    var filename = pathFolders.pop();
-    var request = new XMLHttpRequest();
-    request.onreadystatechange = function () {
-        if (this.readyState === 4) {
-            var packageContent = this.responseText;
-            if (packageContent == "") {
-                CLOCKWORKRT.apps.installDependency(name, version, callback);
-            } else {
-                navigatePath(localFolder, pathFolders, function (folder) {
-                    folder.createFileAsync(filename, Windows.Storage.CreationCollisionOption.replaceExisting).then(function (file) {
-                        Windows.Storage.FileIO.writeTextAsync(file, packageContent).then(callback);
+    var uri = new Windows.Foundation.Uri(`ms-appdata:///local/installedDependencies/${name}/${version}.js`);
+    var file = Windows.Storage.StorageFile.getFileFromApplicationUriAsync(uri).done(function (file) {
+        console.log(name + " is already installed");
+        callback();
+    }, function (x) {
+        var localFolder = Windows.Storage.ApplicationData.current.localFolder;
+        var path = `installedDependencies/${name}/${version}.js`
+        var pathFolders = path.split("/");
+        var filename = pathFolders.pop();
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (this.readyState === 4) {
+                var packageContent = this.responseText;
+                if (packageContent == "") {
+                    CLOCKWORKRT.apps.installDependency(name, version, callback);
+                } else {
+                    navigatePath(localFolder, pathFolders, function (folder) {
+                        folder.createFileAsync(filename, Windows.Storage.CreationCollisionOption.replaceExisting).then(function (file) {
+                            Windows.Storage.FileIO.writeTextAsync(file, packageContent).then(callback);
+                        });
                     });
-                });
+                }
             }
-        }
-    };
-    request.open('GET', `http://cwpm.azurewebsites.net/api/packages/${name}/${version}`, true);
-    request.send();
+        };
+        request.open('GET', `http://cwpm.azurewebsites.net/api/packages/${name}/${version}`, true);
+        request.send();
+    });
 }
 
 CLOCKWORKRT.apps.getDependency = function (name, version, callback) {
