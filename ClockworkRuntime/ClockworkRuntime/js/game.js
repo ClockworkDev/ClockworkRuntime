@@ -112,7 +112,8 @@
         function readyToGo() {
             var pipeline = CLOCKWORKRT.rendering.getPipeline().map(function (x) { return CLOCKWORKRT.rendering.get(x)(); });
             pipeline.reduce(function (x, y) {
-                x.chainWith(y);
+                x.chainWith(y)
+                return y;
             });
             var canvas = document.getElementById("canvas");
             canvas.width = window.innerWidth;
