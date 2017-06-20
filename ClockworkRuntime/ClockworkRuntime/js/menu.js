@@ -22,4 +22,35 @@ window.addEventListener("load", function () {
     document.getElementById("installSettings").addEventListener("click", function () {
         CLOCKWORKRT.apps.installAppFromURL('https://github.com/ClockworkDev/ClockworkRuntimeCoreApps/blob/master/Settings/Settings.cw?raw=true', CLOCKWORKRT.API.loadMenu);
     });
+    document.getElementById("ipAddress").innerHTML = getIPaddress();
 })
+
+
+
+var datagramSocket = new Windows.Networking.Sockets.DatagramSocket();
+datagramSocket.control.outboundUnicastHopLimit = 10;
+
+datagramSocket.onmessagereceived = function (e) {
+    var reader = e.getDataReader()
+    var rawString = reader.readString(reader.unconsumedBufferLength);
+    var commands = rawString.split("/");
+    switch (commands[0]) {
+        case "deployPackage":
+            CLOCKWORKRT.apps.installAppFromURL("http://" + e.remoteAddress.canonicalName + ":" + commands[1] + "/deployPackage", function () {
+                location = "menu.html";
+            });
+            break;
+    }
+};
+
+
+var connectionProfile = Windows.Networking.Connectivity.NetworkInformation.getInternetConnectionProfile();
+if (connectionProfile) {
+    datagramSocket.bindServiceNameAsync("8775", connectionProfile.networkAdapter).done(function () {
+        datagramSocket.joinMulticastGroup(new Windows.Networking.HostName("224.0.0.1"));
+    }, function (e) {
+        console.log(JSON.stringify(e));
+    }, function (e) {
+        console.log(JSON.stringify(e));
+    });
+}
