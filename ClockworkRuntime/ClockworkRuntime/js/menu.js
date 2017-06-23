@@ -40,6 +40,12 @@ datagramSocket.onmessagereceived = function (e) {
                 location = "menu.html";
             });
             break;
+        case "debug":
+            var port = commands[1];
+            var appName = commands[2];
+            var levelEditorEnabled = commands[3];
+            CLOCKWORKRT.apps.debugApp(appName, "http://" + e.remoteAddress.canonicalName + ":" + port, levelEditorEnabled);
+            break;
     }
 };
 
