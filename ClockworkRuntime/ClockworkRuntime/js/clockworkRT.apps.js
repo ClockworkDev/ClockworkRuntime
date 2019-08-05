@@ -225,7 +225,7 @@ CLOCKWORKRT.apps.installDependency = function (name, version, callback) {
                 }
             }
         };
-        request.open('GET', `http://cwpm.azurewebsites.net/api/packages/${name}/${version}`, true);
+        request.open('GET', `https://clockworkdev.github.io/ClockworkPackages/packages/${name}/${version}/components.js`, true);
         request.send();
     });
 }
